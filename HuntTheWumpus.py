@@ -266,19 +266,19 @@ for game in range(numgames):
         elif move == 'SN':
             if remainingarrows > 0 and screamCheck(playerx, playery, board, 'n'):
                 percept = percept + 'C'
-                remainingarrows = remainingarrows - 1
+            remainingarrows = remainingarrows - 1
         elif move == 'SS':
             if remainingarrows > 0 and screamCheck(playerx, playery, board, 's'):
                 percept = percept + 'C'
-                remainingarrows = remainingarrows - 1
+            remainingarrows = remainingarrows - 1
         elif move == 'SE':
             if remainingarrows > 0 and screamCheck(playerx, playery, board, 'e'):
                 percept = percept + 'C'
-                remainingarrows = remainingarrows - 1
+            remainingarrows = remainingarrows - 1
         elif move == 'SW':
             if remainingarrows > 0 and screamCheck(playerx, playery, board, 'w'):
                 percept = percept + 'C'
-                remainingarrows = remainingarrows - 1
+            remainingarrows = remainingarrows - 1
         #win check
         elif move == 'C':
             if winCheck(playerx, playery, board):
