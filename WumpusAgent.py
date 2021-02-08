@@ -10,19 +10,39 @@ gametype=0
 numarrows=0
 numwumpi=0
 
+#determines state of ai
 foundgold = False
+
+#actions AI can do
+moveup = 'N'
+movedown = 'S'
+moveleft = 'W'
+moveright = 'E'
+
+shootup = 'SN'
+shootdown = 'SS'
+shootleft = 'SW'
+shootright = 'SE'
+
+climbout = 'C'
+grabgold = 'G'
+
+#AI can have 2 states, states of AI are of the following
+# 1. Searching
+# 2. Escaping
+state = ''
 
 pastmoves = []
 
 def setParams(type, arrows, wumpi):
-    gametype=type
+    gametype = type
     numarrows = arrows
     numwumpi = wumpi
 
 
 def getMove(percept = ''):
 
-    nextmove = parsePercept(percept);
+    nextmove = parsePercept(percept)
 
     if(percept == ''):
         print("empty")
@@ -32,13 +52,22 @@ def getMove(percept = ''):
     return nextmove
 
 def parsePercept(percept):
-    move = ''
+    global foundgold
+    if(foundgold == False):
+        state = 'Searching'
+    elif(foundgold == True):
+        state = 'Escaping'
+
+    move = moveup
+
+    #print(*pastmoves)
+
     if(percept.__contains__('G')):
         foundgold = True
-        move = 'G'
+        move = grabgold
 
     if (percept.__contains__("U")):
-        pastmoves.remove(len(pastmoves))
+        pastmoves.pop()
 
     pastmoves.append(move)
     return move

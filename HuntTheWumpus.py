@@ -236,6 +236,7 @@ for game in range(numgames):
         percept = percept + 'B'
     #while the player is not dead, and hasn't won yet, get the next move
     while deathCheck != True and winCheck != True and nummoves != 4000000:
+        time.sleep(1)
         nummoves = nummoves + 1
         #get move from agent
         move = WumpusAgent.getMove(percept)
