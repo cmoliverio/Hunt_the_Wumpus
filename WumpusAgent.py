@@ -10,6 +10,8 @@ gametype=0
 numarrows=0
 numwumpi=0
 
+foundgold = False
+
 pastmoves = []
 
 def setParams(type, arrows, wumpi):
@@ -19,10 +21,23 @@ def setParams(type, arrows, wumpi):
 
 
 def getMove(percept = ''):
-    move = 'N'
-    print(percept)
 
-    if(percept.__contains__("U")):
+    nextmove = parsePercept(percept);
+
+    if(percept == ''):
+        print("empty")
+    else:
+        print(percept)
+
+    return nextmove
+
+def parsePercept(percept):
+    move = ''
+    if(percept.__contains__('G')):
+        foundgold = True
+        move = 'G'
+
+    if (percept.__contains__("U")):
         pastmoves.remove(len(pastmoves))
 
     pastmoves.append(move)
