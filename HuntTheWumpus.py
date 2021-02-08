@@ -11,6 +11,7 @@
 #Note: there are very few self-error checks as part of this program.
 from random import randint
 import WumpusAgent
+import time
 
 #--------------------------
 #globals
