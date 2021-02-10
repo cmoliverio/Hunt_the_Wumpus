@@ -89,15 +89,8 @@ def getMove(percept = ''):
     print()
     nextmove = parsePercept(percept)
     editMapAndPlayerPosition(nextmove)
-    #print("player pos: x: ", playerpositionx, "y: ", playerpositiony)
-    #if len(pastmoves) > 0 and not percept.__contains__('U'):
-    #    editMapAndPlayerPosition(pastmoves[len(pastmoves) - 1])
-    #print("Next move: ", nextmove)
     pastmoves.append(nextmove)
 
-    #print("Percept:", percept, "\t\tPlyPos: x:", playerpositionx, "y:", playerpositiony)
-    #printMap()
-    #print()
     return nextmove
 
 def checkBump(perceptstring):
