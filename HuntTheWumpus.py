@@ -40,7 +40,10 @@ wumpilist = []
 #0 = empty space
 def setupBoard(wumpi, arrows):
     #get size of board, needs to be at least the number of wumpi + 2 * 2
-    n = randint(wumpi+2, 200)
+
+    #temporarily making this a smaller number for testing
+    #n = randint(wumpi+2, 200)
+    n = randint(wumpi + 2, 4)
 
     #initialize board, 0 represents a blank space
     l = []
@@ -55,26 +58,26 @@ def setupBoard(wumpi, arrows):
 
     #populate the pits, avoiding the gold, capped at twice the size of a single dimension
     #note: we are secretly ok with a pit on top of a pit, so we don't check for that
-    numpits = randint(0, n*2)
-    for i in range(numpits):
-        x = randint(0, n-1)
-        y = randint(0, n-1)
-        while(x == gx and y == gy):
-            x = randint(0, n-1)
-            y = randint(0, n-1)
-        l[x][y] = 'p'
+    #numpits = randint(0, n*2)
+    #for i in range(numpits):
+    #    x = randint(0, n-1)
+    #    y = randint(0, n-1)
+    #    while(x == gx and y == gy):
+    #        x = randint(0, n-1)
+    #        y = randint(0, n-1)
+    #    l[x][y] = 'p'
 
     #populate the wumpi, avoiding gold and pits
-    for i in range(wumpi):
-        #loop for checking our x, y value
-        flag = True
-        while(flag):
-            x = randint(0, n-1)
-            y = randint(0, n-1)
-            if l[x][y] == 0:
-                l[x][y] = 'w'
-                wumpilist.append([x,y])
-                flag = False
+    #for i in range(wumpi):
+    #    #loop for checking our x, y value
+    #    flag = True
+    #    while(flag):
+    #        x = randint(0, n-1)
+    #        y = randint(0, n-1)
+    #        if l[x][y] == 0:
+    #            l[x][y] = 'w'
+    #            wumpilist.append([x,y])
+    #            flag = False
 
     #place the entrance, updating player x and y value
     flag = True
@@ -215,6 +218,15 @@ numpitdeaths = 0
 numwumpusdeaths = 0
 numtimeouts = 0
 
+def printBoard(theboard):
+    for i in range(len(theboard)):
+        for j in range(len(theboard[0])):
+            if(playerx == i and playery == j):
+                print('*', ' ', end='')
+            else:
+                print(theboard[i][j], ' ', end='')
+        print()
+
 #simulation start
 for game in range(numgames):
     remainingarrows = numarrows
@@ -222,6 +234,8 @@ for game in range(numgames):
 
     #set board, and player values
     board, playerx, playery = setupBoard(numwumpi, numarrows)
+
+    #printBoard(board)
 
     #set parameter for player - this is the reset for the WumpusAgent
     WumpusAgent.setParams(gametype, numarrows, numwumpi)
@@ -237,6 +251,7 @@ for game in range(numgames):
     #while the player is not dead, and hasn't won yet, get the next move
     while deathCheck != True and winCheck != True and nummoves != 4000000:
         time.sleep(1)
+        printBoard(board)
         nummoves = nummoves + 1
         #get move from agent
         move = WumpusAgent.getMove(percept)
