@@ -10,21 +10,18 @@ gametype: int = 0
 numarrows: int = 0
 numwumpi: int = 0
 
-# count moves
-movecount = 0
-
 # map and player virtual positions
 # actual_player_x_position_in_array = playerpositionx + virtualoriginx
 map = []
-virtualoriginy = 0
-virtualoriginx = 0
-playerpositionx = 0
-playerpositiony = 0
+virtualoriginy: int = 0
+virtualoriginx: int = 0
+playerpositionx: int = 0
+playerpositiony: int= 0
 
-maxxpos = 999
-minxpos = -999
-maxypos = 999
-minypos = -999
+maxxpos: int = 999
+minxpos: int = -999
+maxypos: int = 999
+minypos: int = -999
 
 # determines searching or escaping state of AI
 foundgold: bool = False
@@ -58,7 +55,7 @@ def setParams(type, arrows, wumpi):
     global gametype
     global numarrows
     global numwumpi
-    gametype= type
+    gametype = type
     numarrows = arrows
     numwumpi = wumpi
 
@@ -97,6 +94,57 @@ def checkBump(perceptstring):
     if (perceptstring.__contains__('U')):
         lastmove = pastmoves.pop()
         undoMoveSetLimitRemoveRowOrColumn(lastmove)
+
+def parsePercept(percept):
+    global foundgold
+
+    #if(foundgold == False):
+    #    state = 'Searching'
+    #elif(foundgold == True):
+    #    state = 'Escaping'
+
+    move = moveleft
+
+    if (percept.__contains__('G')):
+        move = grabgold
+        foundgold = True
+
+    pastmoves.append(move)
+    return move
+
+# tracks player position, also when discovering a new row or column,
+# adds new column to list, updates virtual origin for AI
+# in order to make a move, must be within grid,
+# grid walls are defined by minypos, maxypos, minxpos, and maxxpos
+def editMapAndPlayerPosition(themove):
+    global playerpositionx
+    global playerpositiony
+    global virtualoriginy
+    global virtualoriginx
+
+    if themove == moveup and playerpositiony > minypos:
+        if virtualoriginy + playerpositiony == 0:
+            map.insert(0, [0] * len(map[0]))
+            virtualoriginy = virtualoriginy + 1
+        playerpositiony = playerpositiony - 1
+
+    if themove == movedown and playerpositiony < maxypos:
+        if virtualoriginy + playerpositiony == len(map) - 1:
+            map.append([0] * len(map[0]))
+        playerpositiony = playerpositiony + 1
+
+    if themove == moveleft and playerpositionx > minxpos:
+        if virtualoriginx + playerpositionx == 0:
+            virtualoriginx = virtualoriginx + 1
+            for row in range(len(map)):
+                map[row].insert(0, 0)
+        playerpositionx = playerpositionx - 1
+
+    if themove == moveright and playerpositionx < maxxpos:
+        if virtualoriginx + playerpositionx == len(map[0]) - 1:
+            for row in range(len(map)):
+                map[row].append(0)
+        playerpositionx = playerpositionx + 1
 
 # this method undoes the last move,
 # so that when a wall is hit, the max and min x or y
@@ -145,58 +193,6 @@ def undoMoveSetLimitRemoveRowOrColumn(last_move):
         # player mover decremented to correct spot, also sets limit
         maxypos = playerpositiony
         playerpositiony = playerpositiony - 1
-
-def parsePercept(percept):
-    global foundgold
-    global movecount
-
-    #if(foundgold == False):
-    #    state = 'Searching'
-    #elif(foundgold == True):
-    #    state = 'Escaping'
-
-    move = moveright
-
-    if (percept.__contains__('G')):
-        foundgold = True
-        move = grabgold
-
-    pastmoves.append(move)
-    return move
-
-# tracks player position, also when discovering a new row or column,
-# adds new column to list, updates virtual origin for AI
-# in order to make a move, must be within grid,
-# grid walls are defined by minypos, maxypos, minxpos, and maxxpos
-def editMapAndPlayerPosition(themove):
-    global playerpositionx
-    global playerpositiony
-    global virtualoriginy
-    global virtualoriginx
-
-    if themove == moveup and playerpositiony > minypos:
-        if virtualoriginy + playerpositiony == 0:
-            map.insert(0, [0] * len(map[0]))
-            virtualoriginy = virtualoriginy + 1
-        playerpositiony = playerpositiony - 1
-
-    if themove == movedown and playerpositiony < maxypos:
-        if virtualoriginy + playerpositiony == len(map) - 1:
-            map.append([0] * len(map[0]))
-        playerpositiony = playerpositiony + 1
-
-    if themove == moveleft and playerpositionx > minxpos:
-        if virtualoriginx + playerpositionx == 0:
-            virtualoriginx = virtualoriginx + 1
-            for row in range(len(map)):
-                map[row].insert(0, 0)
-        playerpositionx = playerpositionx - 1
-
-    if themove == moveright and playerpositionx < maxxpos:
-        if virtualoriginx + playerpositionx == len(map[0]) - 1:
-            for row in range(len(map)):
-                map[row].append(0)
-        playerpositionx = playerpositionx + 1
 
 
 def getActualPlayerYPosition():
