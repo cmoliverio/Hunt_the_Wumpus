@@ -6,12 +6,12 @@
 #while avoiding pits and the wumpus, and then escape alive!
 
 #parameters for type of game
-from typing import List, Any
 gametype: int = 0
 numarrows: int = 0
 numwumpi: int = 0
 
-#map
+#map and player virtual positions
+# actual_player_x_position_in_array = playerpositionx + virtualoriginx
 map = []
 virtualoriginy = 0
 virtualoriginx = 0
@@ -61,22 +61,24 @@ def setParams(type, arrows, wumpi):
 
 movecount = 0
 def getMove(percept = ''):
-
+    global movecount
+    print("Percept = ", percept, "MOVECOUNT: ", movecount)
     printMap()
 
     nextmove: str = parsePercept(percept)
+    print("Move: ", nextmove)
     editMapAndPlayerPosition(nextmove)
-
-    if percept == '':
-        print("empty")
-    else:
-        print(percept)
-
+    print()
     return nextmove
 
 def printMap():
-    for i in range(0, len(map)):
-        print("[", *map[i], "]")
+    for i in range(len(map)):
+        for j in range(len(map[i])):
+            if(i == getActualPlayerYPosition() and getActualPlayerXPosition() == j):
+                print('P', ' ', end='',)
+            else:
+                print(map[i][j], ' ', end = '')
+        print()
 
 def editMapAndPlayerPosition(themove):
     global playerpositionx
@@ -84,8 +86,9 @@ def editMapAndPlayerPosition(themove):
     global virtualoriginy
     global virtualoriginx
 
-    print("position: ", playerpositionx, playerpositiony)
-    print("virtual origin: ", virtualoriginx, virtualoriginy)
+    print("virutal position: x: ", playerpositionx, "y: ", playerpositiony)
+    print("actual position: x: ", getActualPlayerXPosition(), "y: ", getActualPlayerYPosition())
+    print("origin:", virtualoriginx, virtualoriginy)
 
     #tracks player position, also when discovering a new row or column,
     # adds new column to list, updates virtual origin for AI
@@ -96,11 +99,29 @@ def editMapAndPlayerPosition(themove):
         playerpositiony = playerpositiony - 1
 
     if themove == movedown:
-        if virtualoriginy - playerpositionx == 0:
+        if virtualoriginy + playerpositiony == len(map) - 1:
             map.append([0] * len(map[0]))
         playerpositiony = playerpositiony + 1
 
+    if themove == moveleft:
+        if virtualoriginx + playerpositionx == 0:
+            virtualoriginx = virtualoriginx + 1
+            for row in range(len(map)):
+                map[row].insert(0, 0)
+        playerpositionx = playerpositionx - 1
 
+    if themove == moveright:
+        if virtualoriginx + playerpositionx == len(map[0]) - 1:
+            for row in range(len(map)):
+                map[row].append(0)
+        playerpositionx = playerpositionx + 1
+
+
+def getActualPlayerYPosition():
+    return playerpositiony + virtualoriginy
+
+def getActualPlayerXPosition():
+    return playerpositionx + virtualoriginx
 
 def parsePercept(percept):
     global foundgold
@@ -110,11 +131,14 @@ def parsePercept(percept):
     elif(foundgold == True):
         state = 'Escaping'
 
-    if movecount == 3:
-        move = moveup
+    if movecount == 2:
+        move = moveleft
+    elif movecount == 3 or movecount == 4:
+        move = moveright
     else:
         move = movedown
     movecount = movecount + 1
+
     if(percept.__contains__('G')):
         foundgold = True
         move = grabgold
