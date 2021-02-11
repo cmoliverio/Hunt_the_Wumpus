@@ -180,7 +180,7 @@ def checkPerceptAndUpdateDict(percept):
         # increase the dangerlevel by 1
         breeze = True
         dangerlevel += 1
-    if "W" in percept:
+    if "S" in percept:
         stench = True
         dangerlevel += 1
     if "G" in percept:
