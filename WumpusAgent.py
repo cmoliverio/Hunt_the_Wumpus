@@ -93,7 +93,10 @@ def getMove(percept):
     # is known to be safe to return to -- unless with moving wumpus and there's no way to track them realistically
     # so best bet is just to retrace footsteps :)
     if foundgold is True:
-        move = invertMove(moveHistory.pop())
+        lastmove = moveHistory.pop()
+        if lastmove == grabgold:
+            lastmove = moveHistory.pop()
+        move = invertMove(lastmove)
         print(move)
         updatePlayerPosition(move)
         return move
@@ -134,6 +137,7 @@ def getMove(percept):
         random_move = makeRandomMove()
         updatePlayerPosition(random_move)
         moveHistory.append(random_move)
+        print("executing random move :(")
         return random_move
 
     else:
