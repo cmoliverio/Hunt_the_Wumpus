@@ -65,6 +65,9 @@ def setParams(type, arrows, wumpi):
 def updatePlayerPosition(move):
     global playerx
     global playery
+    global pastLocations
+    global safeUnvisited
+
     if move == moveup:
         playery += 1
     if move == movedown:
@@ -73,10 +76,12 @@ def updatePlayerPosition(move):
         playerx +=1
     if move == moveleft:
         playerx -=1
+    #add the place to pastLocations if not already in the last 100
     if [playerx, playery] not in pastLocations[-100:]:
         pastLocations.append([playerx, playery])
-    print("X", playerx)
-    print("Y", playery)
+    #remove the place from safeUnvisited list
+    if [playerx, playery] in safeUnvisited:
+        safeUnvisited.remove([playerx, playery])
 
 def getMove(percept):
     global playerx
