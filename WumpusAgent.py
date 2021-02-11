@@ -89,6 +89,7 @@ def getMove(percept):
     # so best bet is just to retrace footsteps :)
     if foundgold is True:
         move = invertMove(moveHistory.pop())
+        print(move)
         updatePlayerPosition(move)
         return move
 
