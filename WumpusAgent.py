@@ -18,6 +18,7 @@ virtualoriginx: int = 0
 playerpositionx: int = 0
 playerpositiony: int= 0
 
+
 maxxpos: int = 999
 minxpos: int = -999
 maxypos: int = 999
