@@ -73,6 +73,8 @@ def updatePlayerPosition(move):
         playerx +=1
     if move == moveleft:
         playerx -=1
+    if [playerx, playery] not in pastLocations[-100:]:
+        pastLocations.append([playerx, playery])
     print("X", playerx)
     print("Y", playery)
 
@@ -104,7 +106,7 @@ def getMove(percept):
         if len(safeUnvisited) > 0:
             safe_spots = []
             # if the spots immediately around you are available, go there!
-            for i in safeUnvisited:
+            for i in safeUnvisited[-50:]:
                 if i[0] == playerx and i[1] == playery - 1:
                     safe_spots.append(movedown)
                 if i[0] == playerx and i[1] == playery + 1:
@@ -116,19 +118,39 @@ def getMove(percept):
             if len(safe_spots) > 0:
                 move_index = random.randint(0, len(safe_spots)-1)
                 move = safe_spots[move_index]
-                updatePlayerPosition(move)
-                moveHistory.append(move)
-                return move
+                if isValidMove(move):
+                    updatePlayerPosition(move)
+                    moveHistory.append(move)
+                    return move
 
         # if no safe paths -- gotta pick because no infinite loops and just hope for the best
         # randomly select either up down left or right
-        rand_index = random.randint(0, 4)
+        random_move = makeRandomMove()
+        updatePlayerPosition(random_move)
+        moveHistory.append(random_move)
+        return random_move
 
     else:
         moveHistory.append(move_recommendation)
         updatePlayerPosition(move_recommendation)
         return move_recommendation
 
+
+def makeRandomMove():
+    rand_index = random.randint(0, 3)
+    if rand_index == 0:
+        rand_move = movedown
+    if rand_index == 1:
+        rand_move = moveup
+    if rand_index == 2:
+        rand_move = moveright
+    if rand_index == 3:
+        rand_move = moveleft
+
+    if isValidMove(rand_move):
+        return rand_move
+    else:
+        return makeRandomMove()
 
 def checkPerceptAndUpdateDict(percept):
     global foundgold
@@ -262,6 +284,7 @@ def checkPerceptAndUpdateDict(percept):
 def checkBump(percept):
     if "U" in percept:
         last_move = moveHistory.pop()
+        pastLocations.pop() #remove the last location from this list since past wall
         dealWithWallHit(last_move)
 
 
@@ -309,3 +332,21 @@ def invertMove(move):
         return movedown
     if move == movedown:
         return moveup
+
+def isValidMove(move):
+    potential_x = playerx
+    potential_y = playery
+    if move == moveright:
+        potential_x +=1
+    if move == moveleft:
+        potential_x -=1
+    if move == moveup:
+        potential_y +=1
+    if move == movedown:
+        potential_y -=1
+
+    if potential_x not in range(minxpos, maxxpos):
+        return False
+    if potential_y not in range(minypos, maxypos):
+        return False
+    return True
