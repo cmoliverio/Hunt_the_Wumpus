@@ -317,7 +317,7 @@ def dealWithWallHit(previousMove):
         minypos = playery
 
     print("FOUND Wall")
-    print('Max x', maxxpos,  ' Max y' , maxypos,  'Min x' ,minxpos, 'Min y', minypos)
+    print('Max x', maxxpos, ' Max y', maxypos,  'Min x', minxpos, 'Min y', minypos)
 
     for i in safeUnvisited:
         if i[0] < minxpos or i[0] > maxxpos or i[1] < minypos or i[1] > maxypos:
@@ -338,16 +338,16 @@ def isValidMove(move):
     potential_x = playerx
     potential_y = playery
     if move == moveright:
-        potential_x +=1
+        potential_x += 1
     if move == moveleft:
-        potential_x -=1
+        potential_x -= 1
     if move == moveup:
-        potential_y +=1
+        potential_y += 1
     if move == movedown:
-        potential_y -=1
+        potential_y -= 1
 
-    if potential_x not in range(minxpos, maxxpos):
+    if potential_x not in range(minxpos, maxxpos+1):
         return False
-    if potential_y not in range(minypos, maxypos):
+    if potential_y not in range(minypos, maxypos+1):
         return False
     return True
