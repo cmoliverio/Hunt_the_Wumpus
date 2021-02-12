@@ -55,7 +55,7 @@ moveHistory: list = []
 knownInfo: dict = {}
 
 #counter to see if in infinite loop
-counter: int = 0
+move_recommendation = ""
 
 def setParams(type, arrows, wumpi):
     global gametype
@@ -72,6 +72,7 @@ def setParams(type, arrows, wumpi):
     global maxypos
     global minxpos
     global minypos
+    global move_recommendation
     gametype = type
     numarrows = arrows
     numwumpi = wumpi
@@ -86,6 +87,7 @@ def setParams(type, arrows, wumpi):
     minxpos = -999
     maxypos = 999
     minypos = -999
+    move_recommendation = ""
 
 
 def updatePlayerPosition(move):
@@ -110,14 +112,16 @@ def updatePlayerPosition(move):
     if [playerx, playery] in safeUnvisited:
         safeUnvisited.remove([playerx, playery])
 
-    print(playerx, playery)
-
+    # print(playerx, playery)
 
 def getMove(percept):
     global playerx
     global playery
     global moveHistory
     global safeUnvisited
+    global move_recommendation
+
+    move_recommendation = ''
 
     # if already found gold, just backtrack -- don't worry about other things because everything in move history
     # is known to be safe to return to -- unless with moving wumpus and there's no way to track them realistically
@@ -158,7 +162,6 @@ def getMove(percept):
                     safe_spots.append(moveright)
                 if i[0] == playerx - 1 and i[1] == playery:
                     safe_spots.append(moveleft)
-            print(safe_spots)
 
             for i in safe_spots:
                 if not isValidMove(i):
@@ -168,7 +171,6 @@ def getMove(percept):
             # it won't mean death
             adjacentSpots = [[playerx, playery - 1], [playerx, playery + 1], [playerx + 1, playery],[playerx - 1, playery]]
             possibleMoves = []
-            backtracks = 0
 
             # go through all the adjacent spots and see if they're in pastLocations meaning they've been traveled
             for i in adjacentSpots:
@@ -187,7 +189,7 @@ def getMove(percept):
                 move = safe_spots[move_index]
                 updatePlayerPosition(move)
                 moveHistory.append(move)
-                print("Untraveled")
+                # print("Untraveled")
                 # print(move)
                 return move
             elif len(possibleMoves) > 0 and len(moveHistory) > 0:
@@ -196,23 +198,9 @@ def getMove(percept):
                 # move = possibleMoves[move_index]
                 # updatePlayerPosition(move)
                 # moveHistory.append(move)
-                print("Traveled")
-                # print("backtracking")
-                # print(moveHistory[-10:])
-                # print(knownInfo[playerx, playery])
-                print("Last move "+ moveHistory[-1])
-                print(moveHistory[-10:])
                 prev_move = moveHistory.pop()
-                print("Move popped off", prev_move)
-                print(moveHistory[-10:])
                 move = invertMove(prev_move)
-                print("Inverted move " + move)
                 updatePlayerPosition(move)
-                print("Move History", moveHistory[-10:])
-                # print()
-                # these checks show that it's handeling it correctly in the moment
-                # however, the next time it runs they don't remember the change ???
-                # ask alan
                 return move
             else:
                 # if no safe paths -- gotta pick because no infinite loops and just hope for the best
@@ -220,10 +208,9 @@ def getMove(percept):
                 random_move = makeRandomMove()
                 updatePlayerPosition(random_move)
                 moveHistory.append(random_move)
-                print("executing random move :(")
                 return random_move
 
-    else:
+    if len(move_recommendation) >0:
         moveHistory.append(move_recommendation)
         updatePlayerPosition(move_recommendation)
         return move_recommendation
@@ -256,7 +243,7 @@ def checkPerceptAndUpdateDict(percept):
     glitter = False
     scream = False
     dangerlevel = 0
-    nextmove = ''
+    nextmove = ""
 
     if "B" in percept:
         # increase the dangerlevel by 1
@@ -287,11 +274,6 @@ def checkPerceptAndUpdateDict(percept):
     # by 1 -- other than that this doesn't really make a difference because still need to move and find gold
     if scream is True:
         numwumpi -= 1 # we don't really do much with this :/
-
-
-    # if there's both a pit and wumpus near -- danger will robinson go back, this is probably death
-    if breeze is True and stench is True:
-        nextmove = invertMove(moveHistory[-1])
 
     # update the dictionary and safeUnexplored with the percept information
     updateDict(playerx, playery, breeze, stench, dangerlevel)
