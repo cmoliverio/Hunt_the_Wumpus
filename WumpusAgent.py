@@ -5,6 +5,7 @@
 # Description: Agent designed to retrieve the gold from the cave
 # while avoiding pits and the wumpus, and then escape alive!
 import random
+import time
 
 # parameters for type of game
 gametype = 0
@@ -53,14 +54,27 @@ moveHistory: list = []
 # then being updated when more information is known
 knownInfo: dict = {}
 
+#counter to see if in infinite loop
+counter: int = 0
 
 def setParams(type, arrows, wumpi):
     global gametype
     global numarrows
     global numwumpi
+    global knownInfo
+    global moveHistory
+    global safeUnvisited
+    global pastLocations
+    global foundgold
     gametype = type
     numarrows = arrows
     numwumpi = wumpi
+    knownInfo = {}
+    moveHistory = []
+    safeUnvisited = []
+    pastLocations = []
+    foundgold = False
+
 
 def updatePlayerPosition(move):
     global playerx
@@ -71,17 +85,20 @@ def updatePlayerPosition(move):
     if move == moveup:
         playery += 1
     if move == movedown:
-        playery -=1
+        playery -= 1
     if move == moveright:
-        playerx +=1
+        playerx += 1
     if move == moveleft:
-        playerx -=1
-    #add the place to pastLocations if not already in the last 100
-    if [playerx, playery] not in pastLocations[-100:]:
+        playerx -= 1
+    # add the place to pastLocations if not already in the last 100
+    if [playerx, playery] not in pastLocations[-50:]:
         pastLocations.append([playerx, playery])
-    #remove the place from safeUnvisited list
+    # remove the place from safeUnvisited list
     if [playerx, playery] in safeUnvisited:
         safeUnvisited.remove([playerx, playery])
+
+    print(playerx, playery)
+
 
 def getMove(percept):
     global playerx
@@ -93,13 +110,17 @@ def getMove(percept):
     # is known to be safe to return to -- unless with moving wumpus and there's no way to track them realistically
     # so best bet is just to retrace footsteps :)
     if foundgold is True:
-        lastmove = moveHistory.pop()
-        if lastmove == grabgold:
+        if len(moveHistory) > 0:
             lastmove = moveHistory.pop()
-        move = invertMove(lastmove)
-        print(move)
-        updatePlayerPosition(move)
-        return move
+            if lastmove == grabgold:
+                lastmove = moveHistory.pop()
+            move = invertMove(lastmove)
+            updatePlayerPosition(move)
+            return move
+        else:
+            print("climbing out")
+            time.sleep(1)
+            return climbout
 
     # check to see if you're at an edge already... deal w/ this first
     checkBump(percept)
@@ -124,21 +145,54 @@ def getMove(percept):
                     safe_spots.append(moveright)
                 if i[0] == playerx - 1 and i[1] == playery:
                     safe_spots.append(moveleft)
+            print(safe_spots)
+
+            for i in safe_spots:
+                if not isValidMove(i):
+                    safe_spots.remove(i)
+
+            # check and see if any of the spots around us have been traveled before -- go there next since we know
+            # it won't mean death
+            adjacentSpots = [[playerx, playery - 1], [playerx, playery + 1], [playerx + 1, playery],[playerx - 1, playery]]
+            possibleMoves = []
+            backtracks = 0
+
+            # go through all the adjacent spots and see if they're in pastLocations meaning they've been traveled
+            for i in adjacentSpots:
+                if [i[0], i[1]] in pastLocations[-100:] and isInBounds(i[0], i[1]):
+                    if i[0] == playerx and i[1] == playery - 1:
+                        possibleMoves.append(movedown)
+                    if i[0] == playerx and i[1] == playery + 1:
+                        possibleMoves.append(moveup)
+                    if i[0] == playerx + 1 and i[1] == playery:
+                        possibleMoves.append(moveright)
+                    if i[0] == playerx - 1 and i[1] == playery:
+                        possibleMoves.append(moveleft)
+
             if len(safe_spots) > 0:
                 move_index = random.randint(0, len(safe_spots)-1)
                 move = safe_spots[move_index]
-                if isValidMove(move):
-                    updatePlayerPosition(move)
-                    moveHistory.append(move)
-                    return move
-
-        # if no safe paths -- gotta pick because no infinite loops and just hope for the best
-        # randomly select either up down left or right
-        random_move = makeRandomMove()
-        updatePlayerPosition(random_move)
-        moveHistory.append(random_move)
-        print("executing random move :(")
-        return random_move
+                updatePlayerPosition(move)
+                moveHistory.append(move)
+                print("Untraveled")
+                return move
+            elif len(possibleMoves) > 0:
+                # choose one of those spots
+                move_index = random.randint(0, len(possibleMoves)-1)
+                move = possibleMoves[move_index]
+                updatePlayerPosition(move)
+                moveHistory.append(move)
+                print("Traveled")
+                print(knownInfo[playerx, playery])
+                return move
+            else:
+                # if no safe paths -- gotta pick because no infinite loops and just hope for the best
+                # randomly select either up down left or right
+                random_move = makeRandomMove()
+                updatePlayerPosition(random_move)
+                moveHistory.append(random_move)
+                print("executing random move :(")
+                return random_move
 
     else:
         moveHistory.append(move_recommendation)
@@ -175,7 +229,6 @@ def checkPerceptAndUpdateDict(percept):
     dangerlevel = 0
     nextmove = ''
 
-    # handle breeze
     if "B" in percept:
         # increase the dangerlevel by 1
         breeze = True
@@ -191,103 +244,28 @@ def checkPerceptAndUpdateDict(percept):
     # now all boolean values accurately reflect whether or not the percept was involved
     # much easier to see what's happening now
 
-    # if the square is safe, no dangerous percepts, set all the surrounding squares
-    # to safeUnvisited, because those should be our next moves
-    if dangerlevel == 0:
-        # we know this is a safe square, and all four places around this are safe
-        # to at least move into
-        safeUnvisited.append([playerx + 1, playery])
-        safeUnvisited.append([playerx, playery + 1])
-        safeUnvisited.append([playerx - 1, playery])
-        safeUnvisited.append([playerx, playery - 1])
-
-    # if in square with gold -- grab it!
+    # if in square with gold -- grab it, don't look at anything else!
     if glitter is True:
         print("FOUND GOLD")
         foundgold = True
-        nextmove = grabgold
+        return grabgold
+
+    # if the square is safe, no dangerous percepts, look at all the surrounding
+    # squared, check and see if they're in bounds, already traveled, or already
+    # in safeUnvisited
 
     # if scream, we know wumpus is dead and we may decrease our internal wumpus count
     # by 1 -- other than that this doesn't really make a difference because still need to move and find gold
     if scream is True:
-        numwumpi -= 1
+        numwumpi -= 1 # we don't really do much with this :/
+
 
     # if there's both a pit and wumpus near -- danger will robinson go back, this is probably death
     if breeze is True and stench is True:
         nextmove = invertMove(moveHistory[-1])
 
-    # if there's only a breeze and no wumpus, we can update the dictionary to show that there's not wumpi
-    # in those squares
-    if breeze is True and stench is False:
-        # if the space is already in the dictionary -- update it
-        if (playerx + 1, playery) in knownInfo:
-            already_stored = knownInfo.get((playerx + 1, playery))
-            already_stored[0] = True
-            new_info = {(playerx + 1, playery): already_stored}
-            knownInfo.update(new_info)
-        else:
-            knownInfo[(playerx + 1, playery)] = [True, False]
-
-        if (playerx, playery + 1) in knownInfo:
-            already_stored = knownInfo.get((playerx, playery + 1))
-            already_stored[0] = True
-            new_info = {(playerx, playery + 1): already_stored}
-            knownInfo.update(new_info)
-        else:
-            knownInfo[(playerx, playery + 1)] = [True, False]
-
-        if (playerx - 1, playery) in knownInfo:
-            already_stored = knownInfo.get((playerx - 1, playery))
-            already_stored[0] = True
-            new_info = {(playerx - 1, playery): already_stored}
-            knownInfo.update(new_info)
-        else:
-            knownInfo[(playerx - 1, playery)] = [True, False]
-
-        if (playerx, playery - 1) in knownInfo:
-            already_stored = knownInfo.get((playerx, playery - 1))
-            already_stored[0] = True
-            new_info = {(playerx, playery - 1): already_stored}
-            knownInfo.update(new_info)
-        else:
-            knownInfo[(playerx, playery - 1)] = [True, False]
-
-    # if there's only a breeze and no wumpus, we can update the dictionary to show that there's not wumpi
-    # in those squares
-    if breeze is False and stench is True:
-        # if the space is already in the dictionary -- update it
-        if (playerx + 1, playery) in knownInfo:
-            already_stored = knownInfo.get((playerx + 1, playery))
-            already_stored[1] = True
-            new_info = {(playerx + 1, playery): already_stored}
-            knownInfo.update(new_info)
-        else:
-            knownInfo[(playerx + 1, playery)] = [False, True]
-
-        if (playerx, playery + 1) in knownInfo:
-            already_stored = knownInfo.get((playerx, playery + 1))
-            already_stored[1] = True
-            new_info = {(playerx, playery + 1): already_stored}
-            knownInfo.update(new_info)
-        else:
-            knownInfo[(playerx, playery + 1)] = [False, True]
-
-        if (playerx - 1, playery) in knownInfo:
-            already_stored = knownInfo.get((playerx - 1, playery))
-            already_stored[1] = True
-            new_info = {(playerx - 1, playery): already_stored}
-            knownInfo.update(new_info)
-        else:
-            knownInfo[(playerx - 1, playery)] = [False, True]
-
-        if (playerx, playery - 1) in knownInfo:
-            already_stored = knownInfo.get((playerx, playery - 1))
-            already_stored[1] = True
-            new_info = {(playerx, playery - 1): already_stored}
-            knownInfo.update(new_info)
-        else:
-            knownInfo[(playerx, playery - 1)] = [False, True]
-
+    # update the dictionary and safeUnexplored with the percept information
+    updateDict(playerx, playery, breeze, stench, dangerlevel)
     return nextmove
 
 
@@ -296,7 +274,6 @@ def checkBump(percept):
         last_move = moveHistory.pop()
         pastLocations.pop() #remove the last location from this list since past wall
         dealWithWallHit(last_move)
-
 
 def dealWithWallHit(previousMove):
     global playerx
@@ -343,6 +320,13 @@ def invertMove(move):
     if move == movedown:
         return moveup
 
+def isInBounds(x, y):
+    if x not in range(minxpos, maxxpos+1):
+        return False
+    if y not in range(minypos, maxypos):
+        return False
+    return True
+
 def isValidMove(move):
     potential_x = playerx
     potential_y = playery
@@ -360,3 +344,41 @@ def isValidMove(move):
     if potential_y not in range(minypos, maxypos+1):
         return False
     return True
+
+def updateDict(x, y, breeze, stench, dangerlevel):
+    global safeUnvisited
+    global pastLocations
+    global knownInfo
+    # call this function to update/add things to the dictionary of knownInformation everytime
+    # you receive a percept
+    involvedSpots = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]
+    for point in involvedSpots:
+        point_x = point[0]
+        point_y = point[1]
+        # first check and see if the spot is even in bounds -- if not ignore it :)
+        if isInBounds(point_x, point_y):
+            # if the danger level is 0, we want to add it to safeUnvisited if applicable
+            if dangerlevel == 0:
+                if [point_x, point_y] not in safeUnvisited:
+                    if [point_x, point_y] not in pastLocations:
+                        safeUnvisited.append([point_x, point_y])
+
+            # add the points to the dictionary regardless of values
+            if (point_x, point_y) in knownInfo: # if it's already in the dictionary - update the information
+                already_stored = knownInfo.get((point_x, point_y))
+                # if it's marked to false, then don't change it because we definitively know that the pit/wumpus is
+                # not there -- some other percept has shown that it can't be there
+                # if they're marked to True, change those if need be, because percepts are only possibilities
+                if already_stored[0] is True:
+                    already_stored[0] = breeze
+                if already_stored[1] is True:
+                    already_stored[1] = stench
+                new_info = {(point_x, point_y): already_stored}
+                if already_stored == [False, False]:
+                    # check and see if it's in the safeUnvisited -- if not, add it
+                    if [point_x, point_y] not in safeUnvisited:
+                        if [point_x, point_y] not in pastLocations:
+                            safeUnvisited.append([point_x, point_y])
+                knownInfo.update(new_info)
+            else:
+                knownInfo[(point_x, point_y)] = [breeze, stench]
