@@ -66,6 +66,12 @@ def setParams(type, arrows, wumpi):
     global safeUnvisited
     global pastLocations
     global foundgold
+    global playerx
+    global playery
+    global maxxpos
+    global maxypos
+    global minxpos
+    global minypos
     gametype = type
     numarrows = arrows
     numwumpi = wumpi
@@ -74,6 +80,12 @@ def setParams(type, arrows, wumpi):
     safeUnvisited = []
     pastLocations = []
     foundgold = False
+    playerx = 0
+    playery = 0
+    maxxpos = 999
+    minxpos = -999
+    maxypos = 999
+    minypos = -999
 
 
 def updatePlayerPosition(move):
@@ -176,15 +188,15 @@ def getMove(percept):
                 updatePlayerPosition(move)
                 moveHistory.append(move)
                 print("Untraveled")
-                print(move)
+                # print(move)
                 return move
-            elif len(possibleMoves) > 0:
+            elif len(possibleMoves) > 0 and len(moveHistory) > 0:
                 # choose one of those spots
                 # move_index = random.randint(0, len(possibleMoves)-1)
                 # move = possibleMoves[move_index]
                 # updatePlayerPosition(move)
                 # moveHistory.append(move)
-                # print("Traveled")
+                print("Traveled")
                 # print("backtracking")
                 # print(moveHistory[-10:])
                 # print(knownInfo[playerx, playery])
@@ -197,7 +209,7 @@ def getMove(percept):
                 print("Inverted move " + move)
                 updatePlayerPosition(move)
                 print("Move History", moveHistory[-10:])
-                print()
+                # print()
                 # these checks show that it's handeling it correctly in the moment
                 # however, the next time it runs they don't remember the change ???
                 # ask alan
