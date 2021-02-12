@@ -90,6 +90,7 @@ def updatePlayerPosition(move):
         playerx += 1
     if move == moveleft:
         playerx -= 1
+
     # add the place to pastLocations if not already in the last 100
     if [playerx, playery] not in pastLocations[-50:]:
         pastLocations.append([playerx, playery])
@@ -136,7 +137,7 @@ def getMove(percept):
         if len(safeUnvisited) > 0:
             safe_spots = []
             # if the spots immediately around you are available, go there!
-            for i in safeUnvisited[-50:]:
+            for i in safeUnvisited[-200:]:
                 if i[0] == playerx and i[1] == playery - 1:
                     safe_spots.append(movedown)
                 if i[0] == playerx and i[1] == playery + 1:
@@ -175,15 +176,31 @@ def getMove(percept):
                 updatePlayerPosition(move)
                 moveHistory.append(move)
                 print("Untraveled")
+                print(move)
                 return move
             elif len(possibleMoves) > 0:
                 # choose one of those spots
-                move_index = random.randint(0, len(possibleMoves)-1)
-                move = possibleMoves[move_index]
+                # move_index = random.randint(0, len(possibleMoves)-1)
+                # move = possibleMoves[move_index]
+                # updatePlayerPosition(move)
+                # moveHistory.append(move)
+                # print("Traveled")
+                # print("backtracking")
+                # print(moveHistory[-10:])
+                # print(knownInfo[playerx, playery])
+                print("Last move "+ moveHistory[-1])
+                print(moveHistory[-10:])
+                prev_move = moveHistory.pop()
+                print("Move popped off", prev_move)
+                print(moveHistory[-10:])
+                move = invertMove(prev_move)
+                print("Inverted move " + move)
                 updatePlayerPosition(move)
-                moveHistory.append(move)
-                print("Traveled")
-                print(knownInfo[playerx, playery])
+                print("Move History", moveHistory[-10:])
+                print()
+                # these checks show that it's handeling it correctly in the moment
+                # however, the next time it runs they don't remember the change ???
+                # ask alan
                 return move
             else:
                 # if no safe paths -- gotta pick because no infinite loops and just hope for the best
