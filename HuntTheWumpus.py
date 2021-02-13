@@ -12,10 +12,17 @@
 from random import randint
 import WumpusAgent
 import time
+import pygame
 
 #--------------------------
 #globals
 #--------------------------
+
+#variables for stats
+numwins = 0
+numpitdeaths = 0
+numwumpusdeaths = 0
+numtimeouts = 0
 
 #player location
 playerx = 0
@@ -42,7 +49,7 @@ def setupBoard(wumpi, arrows):
     #get size of board, needs to be at least the number of wumpi + 2 * 2
 
     #temporarily making this a smaller number for testing
-    n = randint(wumpi+2, 200)
+    n = randint(wumpi+2, 50)
 
     #initialize board, 0 represents a blank space
     l = []
@@ -198,6 +205,188 @@ def winCheck(x, y, l):
         return True
     return False
 
+def grid(window, boardlen):
+    distancebetweenrows = window.get_height() / boardlen
+    x = 0
+    y = 0
+    for i in range(boardlen):
+        x += distancebetweenrows
+        y += distancebetweenrows
+
+        pygame.draw.line(window, (0,0,0), (x, 0), (x, window.get_height()))
+        pygame.draw.line(window, (0,0,0), (0, y), (window.get_width(), y))
+
+def redraw(window, board, playerx, playery, lastmove):
+    pitheight = window.get_height() / len(board)
+    pitwidth = window.get_width() / len(board[0])
+
+    for x in range(len(board)):
+        for y in range(len(board)):
+            if board[x][y] == 'w':
+                pygame.draw.rect(window, (255, 0, 0), (x * pitwidth + 2, y * pitheight + 2, pitwidth - 2, pitheight - 2))
+
+
+    if lastmove == 'N':
+        pygame.draw.rect(window, (200, 200, 200), ((playerx + 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
+    elif lastmove == 'S':
+        pygame.draw.rect(window, (200, 200, 200), ((playerx - 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
+    elif lastmove == 'E':
+        pygame.draw.rect(window, (200, 200, 200), (playerx * pitwidth + 2, (playery - 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
+    elif lastmove == 'W':
+        pygame.draw.rect(window, (200, 200, 200), (playerx * pitwidth + 2, (playery + 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
+
+    pygame.draw.rect(window, (0, 255, 255), (playerx * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
+    pygame.display.update()
+
+def pitsGoldStart(window, board):
+    pitheight = window.get_height() / len(board)
+    pitwidth = window.get_width() / len(board[0])
+
+    for x in range(len(board)):
+        for y in range(len(board[0])):
+            if board[x][y] == 'e':
+                pygame.draw.rect(window, (0,0,255), (x * pitwidth, y * pitheight, pitwidth + 1, pitheight + 1))
+            if board[x][y] == 'p':
+                pygame.draw.rect(window, (0,0,0), (x * pitwidth, y * pitheight, pitwidth + 1, pitheight + 1))
+            if board[x][y] == 'g':
+                pygame.draw.rect(window, (255,215,0), (x * pitwidth + 1, y * pitwidth + 1, pitwidth + 1, pitheight + 1))
+
+#simulation start
+def playGame(window):
+    global gotgold
+    global numpitdeaths
+    global numwumpusdeaths
+    global numwins
+
+    for game in range(numgames):
+
+        gotgold = False
+
+        remainingarrows = numarrows
+        nummoves = 0
+
+        #set board, and player values
+        board, playerx, playery = setupBoard(numwumpi, numarrows)
+
+        #set parameter for player - this is the reset for the WumpusAgent
+        WumpusAgent.setParams(gametype, numarrows, numwumpi)
+
+        window.fill((255, 255, 255))
+        grid(window, len(board))
+        pitsGoldStart(window, board)
+        pygame.display.update()
+        time.sleep(1)
+        #redraw(window, board, playerx, playery, 'C')
+
+        #get initial percept string
+        percept = ''
+        if stenchCheck(playerx, playery, board):
+            percept = percept + 'S'
+        if glitterCheck(playerx, playery, board):
+            percept = percept + 'G'
+        if breezeCheck(playerx, playery, board):
+            percept = percept + 'B'
+        #while the player is not dead, and hasn't won yet, get the next move
+        while deathCheck != True and winCheck != True and nummoves != 4000000:
+            #time.sleep(1)
+            #printBoard(board)
+            nummoves = nummoves + 1
+            #get move from agent
+            move = WumpusAgent.getMove(percept)
+            #intialize percept string
+            percept = ''
+            #move parser
+            #increment based on move, perform bump checks, move back if True
+            if move == 'N':
+                playerx = playerx - 1
+                if bumpCheck(playerx, playery, board):
+                    percept = percept + 'U'
+                    playerx = playerx + 1
+            elif move == 'S':
+                playerx = playerx + 1
+                if bumpCheck(playerx, playery, board):
+                    percept = percept + 'U'
+                    playerx = playerx - 1
+            elif move == 'E':
+                playery = playery + 1
+                if bumpCheck(playerx, playery, board):
+                    percept = percept + 'U'
+                    playery = playery - 1
+            elif move == 'W':
+                playery = playery - 1
+                if bumpCheck(playerx, playery, board):
+                    percept = percept + 'U'
+                    playery = playery + 1
+            #collect scream percepts
+            elif move == 'SN':
+                if remainingarrows > 0 and screamCheck(playerx, playery, board, 'n'):
+                    percept = percept + 'C'
+                remainingarrows = remainingarrows - 1
+            elif move == 'SS':
+                if remainingarrows > 0 and screamCheck(playerx, playery, board, 's'):
+                    percept = percept + 'C'
+                remainingarrows = remainingarrows - 1
+            elif move == 'SE':
+                if remainingarrows > 0 and screamCheck(playerx, playery, board, 'e'):
+                    percept = percept + 'C'
+                remainingarrows = remainingarrows - 1
+            elif move == 'SW':
+                if remainingarrows > 0 and screamCheck(playerx, playery, board, 'w'):
+                    percept = percept + 'C'
+                remainingarrows = remainingarrows - 1
+            #win check
+            elif move == 'C':
+                if winCheck(playerx, playery, board):
+                    numwins = numwins + 1
+                    break
+            elif move == 'G':
+                if board[playerx][playery] == 'g':
+                    gotgold = True
+                    board[playerx][playery] = 0
+            else:
+                print("Incorrect move string encountered, exiting: |", move)
+                exit()
+
+            redraw(window, board, playerx, playery, move)
+
+            #death check!
+            if deathCheck(playerx, playery, board):
+                if board[playerx][playery] == 'p':
+                    numpitdeaths = numpitdeaths + 1
+                else:
+                    numwumpusdeaths = numwumpusdeaths + 1
+                break
+
+            #other percepts
+            if stenchCheck(playerx, playery, board):
+                percept = percept + 'S'
+            if glitterCheck(playerx, playery, board):
+                percept = percept + 'G'
+            if breezeCheck(playerx, playery, board):
+                percept = percept + 'B'
+
+            #move the wumpi if that game mode selected
+            if gametype == 2:
+                moveWumpi(wumpilist, board)
+
+            #check if we timed out
+            if nummoves == 4000000:
+                numtimeouts = numtimeouts + 1
+        #quick status print
+        print("Game number " + str(game) + " complete in " + str(nummoves) + " moves.")
+        #cleanup for restart
+        gotgold = False
+        wumpilist = []
+
+#gui functionality
+def runGame():
+    windowheight = 800
+    windowwwidth = 800
+
+    pygame.init()
+    window = pygame.display.set_mode((windowwwidth, windowheight))
+    playGame(window)
+
 #--------------------------
 #driver routine starts here
 #--------------------------
@@ -211,11 +400,7 @@ numwumpi = int(input("Enter the number of wumpi: "))
 numarrows = int(input("Enter the number of arrows: "))
 numgames = int(input("Enter the number of games: "))
 
-#variables for stats
-numwins = 0
-numpitdeaths = 0
-numwumpusdeaths = 0
-numtimeouts = 0
+runGame()
 
 def printBoard(theboard):
     for i in range(len(theboard)):
@@ -225,115 +410,6 @@ def printBoard(theboard):
             else:
                 print(theboard[i][j], ' ', end='')
         print()
-
-#simulation start
-for game in range(numgames):
-    remainingarrows = numarrows
-    nummoves = 0
-
-    #set board, and player values
-    board, playerx, playery = setupBoard(numwumpi, numarrows)
-
-    #set parameter for player - this is the reset for the WumpusAgent
-    WumpusAgent.setParams(gametype, numarrows, numwumpi)
-
-    #get initial percept string
-    percept = ''
-    if stenchCheck(playerx, playery, board):
-        percept = percept + 'S'
-    if glitterCheck(playerx, playery, board):
-        percept = percept + 'G'
-    if breezeCheck(playerx, playery, board):
-        percept = percept + 'B'
-    #while the player is not dead, and hasn't won yet, get the next move
-    while deathCheck != True and winCheck != True and nummoves != 4000000:
-        time.sleep(1)
-        #printBoard(board)
-        nummoves = nummoves + 1
-        #get move from agent
-        move = WumpusAgent.getMove(percept)
-        #intialize percept string
-        percept = ''
-        #move parser
-        #increment based on move, perform bump checks, move back if True
-        if move == 'N':
-            playerx = playerx - 1
-            if bumpCheck(playerx, playery, board):
-                percept = percept + 'U'
-                playerx = playerx + 1
-        elif move == 'S':
-            playerx = playerx + 1
-            if bumpCheck(playerx, playery, board):
-                percept = percept + 'U'
-                playerx = playerx - 1
-        elif move == 'E':
-            playery = playery + 1
-            if bumpCheck(playerx, playery, board):
-                percept = percept + 'U'
-                playery = playery - 1
-        elif move == 'W':
-            playery = playery - 1
-            if bumpCheck(playerx, playery, board):
-                percept = percept + 'U'
-                playery = playery + 1
-        #collect scream percepts
-        elif move == 'SN':
-            if remainingarrows > 0 and screamCheck(playerx, playery, board, 'n'):
-                percept = percept + 'C'
-            remainingarrows = remainingarrows - 1
-        elif move == 'SS':
-            if remainingarrows > 0 and screamCheck(playerx, playery, board, 's'):
-                percept = percept + 'C'
-            remainingarrows = remainingarrows - 1
-        elif move == 'SE':
-            if remainingarrows > 0 and screamCheck(playerx, playery, board, 'e'):
-                percept = percept + 'C'
-            remainingarrows = remainingarrows - 1
-        elif move == 'SW':
-            if remainingarrows > 0 and screamCheck(playerx, playery, board, 'w'):
-                percept = percept + 'C'
-            remainingarrows = remainingarrows - 1
-        #win check
-        elif move == 'C':
-            if winCheck(playerx, playery, board):
-                numwins = numwins + 1
-                break
-        elif move == 'G':
-            if board[playerx][playery] == 'g':
-                gotgold = True
-                board[playerx][playery] = 0
-        else:
-            print("Incorrect move string encountered, exiting")
-            exit()
-
-        #death check!
-        if deathCheck(playerx, playery, board):
-            if board[playerx][playery] == 'p':
-                numpitdeaths = numpitdeaths + 1
-            else:
-                numwumpusdeaths = numwumpusdeaths + 1
-            break
-
-        #other percepts
-        if stenchCheck(playerx, playery, board):
-            percept = percept + 'S'
-        if glitterCheck(playerx, playery, board):
-            percept = percept + 'G'
-        if breezeCheck(playerx, playery, board):
-            percept = percept + 'B'
-
-        #move the wumpi if that game mode selected
-        if gametype == 2:
-            moveWumpi(wumpilist, board)
-
-        #check if we timed out
-        if nummoves == 4000000:
-            numtimeouts = numtimeouts + 1
-    #quick status print
-    print("Game number " + str(game) + " complete in " + str(nummoves) + " moves.")
-    #cleanup for restart
-    gotgold = False
-    wumpilist = []
 
 #stat output
 print("*********************************")

@@ -136,7 +136,7 @@ def getMove(percept):
             return move
         else:
             print("climbing out")
-            time.sleep(1)
+            #time.sleep(1)
             return climbout
 
     # check to see if you're at an edge already... deal w/ this first
@@ -210,10 +210,12 @@ def getMove(percept):
                 moveHistory.append(random_move)
                 return random_move
 
-    if len(move_recommendation) >0:
+    if len(move_recommendation) > 0:
         moveHistory.append(move_recommendation)
         updatePlayerPosition(move_recommendation)
         return move_recommendation
+    else:
+        return makeRandomMove()
 
 
 def makeRandomMove():
