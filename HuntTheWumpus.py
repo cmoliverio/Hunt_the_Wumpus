@@ -49,7 +49,7 @@ def setupBoard(wumpi, arrows):
     #get size of board, needs to be at least the number of wumpi + 2 * 2
 
     #temporarily making this a smaller number for testing
-    n = randint(wumpi+2, 50)
+    n = randint(wumpi+2, 200)
 
     #initialize board, 0 represents a blank space
     l = []
@@ -227,13 +227,13 @@ def redraw(window, board, playerx, playery, lastmove):
 
 
     if lastmove == 'N':
-        pygame.draw.rect(window, (200, 200, 200), ((playerx + 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
+        pygame.draw.rect(window, (0, 200, 200), ((playerx + 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
     elif lastmove == 'S':
-        pygame.draw.rect(window, (200, 200, 200), ((playerx - 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
+        pygame.draw.rect(window, (0, 200, 200), ((playerx - 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
     elif lastmove == 'E':
-        pygame.draw.rect(window, (200, 200, 200), (playerx * pitwidth + 2, (playery - 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
+        pygame.draw.rect(window, (0, 200, 200), (playerx * pitwidth + 2, (playery - 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
     elif lastmove == 'W':
-        pygame.draw.rect(window, (200, 200, 200), (playerx * pitwidth + 2, (playery + 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
+        pygame.draw.rect(window, (0, 200, 200), (playerx * pitwidth + 2, (playery + 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
 
     pygame.draw.rect(window, (0, 255, 255), (playerx * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
     pygame.display.update()
@@ -257,6 +257,8 @@ def playGame(window):
     global numpitdeaths
     global numwumpusdeaths
     global numwins
+    global numtimeouts
+    global wumpilist
 
     for game in range(numgames):
 

@@ -136,7 +136,7 @@ def getMove(percept):
             return move
         else:
             print("climbing out")
-            #time.sleep(1)
+            time.sleep(1)
             return climbout
 
     # check to see if you're at an edge already... deal w/ this first
@@ -148,7 +148,7 @@ def getMove(percept):
     # recommend one, best to see if any of the spaces around you are safe and unexplored, because it's much better
     # to pursue one of those routes than one that is potentially risky
 
-    if len(move_recommendation) == 0:
+    if len(move_recommendation) <= 0:
         # no move recommended by percept -- so check the safe unexplored paths and choose one of them
         if len(safeUnvisited) > 0:
             safe_spots = []
@@ -189,15 +189,9 @@ def getMove(percept):
                 move = safe_spots[move_index]
                 updatePlayerPosition(move)
                 moveHistory.append(move)
-                # print("Untraveled")
-                # print(move)
                 return move
-            elif len(possibleMoves) > 0 and len(moveHistory) > 0:
-                # choose one of those spots
-                # move_index = random.randint(0, len(possibleMoves)-1)
-                # move = possibleMoves[move_index]
-                # updatePlayerPosition(move)
-                # moveHistory.append(move)
+            elif len(possibleMoves) > 0 and len(moveHistory) > 0 and len(safeUnvisited) > 0:
+                # just directly inverting the moves until reaching somewhere with unexplored spots
                 prev_move = moveHistory.pop()
                 move = invertMove(prev_move)
                 updatePlayerPosition(move)
@@ -206,6 +200,8 @@ def getMove(percept):
                 # if no safe paths -- gotta pick because no infinite loops and just hope for the best
                 # randomly select either up down left or right
                 random_move = makeRandomMove()
+                print("randomly moving -- in else statement")
+                print("move:", random_move)
                 updatePlayerPosition(random_move)
                 moveHistory.append(random_move)
                 return random_move
@@ -215,7 +211,13 @@ def getMove(percept):
         updatePlayerPosition(move_recommendation)
         return move_recommendation
     else:
-        return makeRandomMove()
+        random_move = makeRandomMove()
+        print("randomly moving")
+        print("move:", random_move)
+        updatePlayerPosition(random_move)
+        moveHistory.append(random_move)
+        return random_move
+
 
 
 def makeRandomMove():
@@ -285,7 +287,7 @@ def checkPerceptAndUpdateDict(percept):
 def checkBump(percept):
     if "U" in percept:
         last_move = moveHistory.pop()
-        pastLocations.pop() #remove the last location from this list since past wall
+        pastLocations.pop()  # remove the last location from this list since past wall
         dealWithWallHit(last_move)
 
 def dealWithWallHit(previousMove):
