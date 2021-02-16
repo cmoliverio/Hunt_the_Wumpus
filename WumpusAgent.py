@@ -54,7 +54,7 @@ moveHistory: list = []
 # then being updated when more information is known
 knownInfo: dict = {}
 
-#counter to see if in infinite loop
+# counter to see if in infinite loop
 move_recommendation = ""
 
 def setParams(type, arrows, wumpi):
@@ -111,8 +111,6 @@ def updatePlayerPosition(move):
     # remove the place from safeUnvisited list
     if [playerx, playery] in safeUnvisited:
         safeUnvisited.remove([playerx, playery])
-
-    # print(playerx, playery)
 
 def getMove(percept):
     global playerx
@@ -255,10 +253,6 @@ def checkPerceptAndUpdateDict(percept):
         print("FOUND GOLD")
         foundgold = True
         return grabgold
-
-    # if the square is safe, no dangerous percepts, look at all the surrounding
-    # squared, check and see if they're in bounds, already traveled, or already
-    # in safeUnvisited
 
     # if scream, we know wumpus is dead and we may decrease our internal wumpus count
     # by 1 -- other than that this doesn't really make a difference because still need to move and find gold
