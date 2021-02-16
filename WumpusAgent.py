@@ -191,6 +191,7 @@ def getMove(percept):
                 # if there is an already traveled space around you, and you have moves to invert
                 if len(moveHistory) > 0:
                     # just directly inverting the moves until reaching somewhere with unexplored spots
+                    # print("inverting move")
                     prev_move = moveHistory.pop()
                     move = invertMove(prev_move)
                     updatePlayerPosition(move)
@@ -198,13 +199,18 @@ def getMove(percept):
                 else:
                     # if no moves left to reverse -- gotta pick because no infinite loops and just hope for the best
                     # choose a potentially unsafe move
+                    print("randomly moving in else statement")
+                    print("position: ", playerx, playery)
+                    print(safeUnvisited)
                     random_move = randomlyMove()
+                    print("random_move", random_move)
                     updatePlayerPosition(random_move)
                     moveHistory.append(random_move)
                     return random_move
         else:
             # if there's no safe unexplored spots, you want to make a random move to hopefully find one -- no use
             # in backtracking or anything because that wastes time
+            print("randomly moving")
             random_move = randomlyMove()
             updatePlayerPosition(random_move)
             moveHistory.append(random_move)
@@ -314,7 +320,7 @@ def checkPerceptAndUpdateDict(percept):
     # by 1 -- other than that this doesn't really make a difference because still need to move and find gold
     if scream is True:
         print("killed wumpi")
-        numwumpi -= 1  # we don't really do much with this :/
+        numwumpi -= 1
 
     # update the dictionary and safeUnexplored with the percept information
     updateDict(playerx, playery, breeze, stench, dangerlevel)
@@ -337,6 +343,12 @@ def checkPerceptAndUpdateDict(percept):
                     nextmove = shootup
                 if maybeWumpi[0][1] == playery - 1:
                     nextmove = shootdown
+                point_info = knownInfo.get((maybeWumpi[0][0], maybeWumpi[0][1]))
+                point_info[1] = False
+                if point_info[0] is False and point_info[1] is False: # if that space is now clear add it!
+                    safeUnvisited.append([maybeWumpi[0][0], maybeWumpi[0][1]])
+                new_info = {(maybeWumpi[0][0], maybeWumpi[0][1]): point_info}
+                knownInfo.update(new_info)  # update the dictionary with no wumpus there
                 numarrows -= 1  # decrease the number of arrows because we just shot one
 
     return nextmove
@@ -398,7 +410,7 @@ def invertMove(move):
 def isInBounds(x, y):
     if x not in range(minxpos, maxxpos + 1):
         return False
-    if y not in range(minypos, maxypos):
+    if y not in range(minypos, maxypos + 1):
         return False
     return True
 
