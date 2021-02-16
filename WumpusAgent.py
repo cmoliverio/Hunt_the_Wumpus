@@ -1,6 +1,6 @@
 # Hannah Gorel, William Capon, Christian Oliverio, Liam Pratt
 # WumpusAgent.py
-# Date: 2/11/2021
+# Date: 2/16/2021
 # Assignment:Project 1: Hunt the Wumpus
 # Description: Agent designed to retrieve the gold from the cave
 # while avoiding pits and the wumpus, and then escape alive!
@@ -211,7 +211,10 @@ def getMove(percept):
             return random_move
     else:
         # the case of len(move_recommendation) > 0:
+
+        # can probably take next line out? because only options are shooting/grabgold which don't need to be in this list
         moveHistory.append(move_recommendation)
+
         updatePlayerPosition(move_recommendation)
         return move_recommendation
 
@@ -309,6 +312,14 @@ def checkPerceptAndUpdateDict(percept):
 
     # update the dictionary and safeUnexplored with the percept information
     updateDict(playerx, playery, breeze, stench, dangerlevel)
+
+    # pseudo code here --
+    # if stench is True and gameType == 1:
+        # check the four spots around us in the dictionary
+        # for loop tallying the counts for which have False in the 1 index (0 is breeze)
+        # if the count == 3, then we know that the wumpus is in the remaining spot
+        # return shooting in that direction
+
     return nextmove
 
 
@@ -391,8 +402,16 @@ def isValidMove(move):
         return False
     return True
 
+# add function on trying to kill wumpi!!!!! (maybe if gametype == 1 then if thing has stench, check the squares around
+# to see if all but 1 of them already has False marked for stench in the dictionary -- then we know where it is and can
+# shoot an arrow in that direction!  Not sure how to do it for moving wumpi version because they could be adjacent
+# without us knowing :/ -- add this in the checkPerceptAndUpdateDict method first because then it can recommend shooting
+# as a move -- and
+
 
 def updateDict(x, y, breeze, stench, dangerlevel):
+    # add somewhere in here if gametype == 1 then do the things involving the wumpi, but if game ==2 -- not worth
+    # saving the different values of things because they're gonna move
     global safeUnvisited
     global pastLocations
     global knownInfo
