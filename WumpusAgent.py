@@ -154,70 +154,56 @@ def getMove(percept):
             safe_spots = []
             # if the spots immediately around you are available, go there!
             for i in safeUnvisited[-200:]:
-                if i[0] == playerx and i[1] == playery - 1:
+                if i[0] == playerx and i[1] == playery - 1 and isInBounds(i[0], i[1]):
                     safe_spots.append(movedown)
-                if i[0] == playerx and i[1] == playery + 1:
+                if i[0] == playerx and i[1] == playery + 1 and isInBounds(i[0], i[1]):
                     safe_spots.append(moveup)
-                if i[0] == playerx + 1 and i[1] == playery:
+                if i[0] == playerx + 1 and i[1] == playery and isInBounds(i[0], i[1]):
                     safe_spots.append(moveright)
-                if i[0] == playerx - 1 and i[1] == playery:
+                if i[0] == playerx - 1 and i[1] == playery and isInBounds(i[0], i[1]):
                     safe_spots.append(moveleft)
 
-            for i in safe_spots:
-                if not isValidMove(i):
-                    safe_spots.remove(i)
-
-            # check and see if any of the spots around us have been traveled before -- go there next since we know
-            # it won't mean death
-            adjacentSpots = [[playerx, playery - 1], [playerx, playery + 1], [playerx + 1, playery],[playerx - 1, playery]]
-            possibleMoves = []
-
-            # go through all the adjacent spots and see if they're in pastLocations meaning they've been traveled
-            for i in adjacentSpots:
-                if [i[0], i[1]] in pastLocations[-100:] and isInBounds(i[0], i[1]):
-                    if i[0] == playerx and i[1] == playery - 1:
-                        possibleMoves.append(movedown)
-                    if i[0] == playerx and i[1] == playery + 1:
-                        possibleMoves.append(moveup)
-                    if i[0] == playerx + 1 and i[1] == playery:
-                        possibleMoves.append(moveright)
-                    if i[0] == playerx - 1 and i[1] == playery:
-                        possibleMoves.append(moveleft)
-
+            # first choice would be to move to a safe, unexplored spot because there is a chance of finding gold!
+            # if such a space is available
             if len(safe_spots) > 0:
-                move_index = random.randint(0, len(safe_spots)-1)
+                move_index = random.randint(0, len(safe_spots)-1)  # choose one of those safe spaces randomly
                 move = safe_spots[move_index]
-                updatePlayerPosition(move)
+                updatePlayerPosition(move)  # and move there
                 moveHistory.append(move)
                 return move
-            elif len(possibleMoves) > 0 and len(moveHistory) > 0 and len(safeUnvisited) > 0:
-                # just directly inverting the moves until reaching somewhere with unexplored spots
-                prev_move = moveHistory.pop()
-                move = invertMove(prev_move)
-                updatePlayerPosition(move)
-                return move
             else:
-                # if no safe paths -- gotta pick because no infinite loops and just hope for the best
-                # randomly select either up down left or right
-                random_move = makeRandomMove()
-                print("randomly moving -- in else statement")
-                print("move:", random_move)
-                updatePlayerPosition(random_move)
-                moveHistory.append(random_move)
-                return random_move
-
-    if len(move_recommendation) > 0:
+                # check and see if any of the spots around us have been traveled before -- those should be our next
+                # preferred move because we KNOW they're not instant death
+                    # currently deleted the possibleMoves part -- unnecessary but this is where it would go
+                # if there is an already traveled space around you, and you have moves to invert
+                if len(moveHistory) > 0:
+                    # just directly inverting the moves until reaching somewhere with unexplored spots
+                    prev_move = moveHistory.pop()
+                    move = invertMove(prev_move)
+                    updatePlayerPosition(move)
+                    return move
+                else:
+                    # if no moves left to reverse -- gotta pick because no infinite loops and just hope for the best
+                    # randomly select either up down left or right
+                    random_move = makeRandomMove()
+                    print("randomly moving -- in else statement")
+                    print("move:", random_move)
+                    updatePlayerPosition(random_move)
+                    moveHistory.append(random_move)
+                    return random_move
+        else:
+            # if there's no safe unexplored spots, you want to make a random move to hopefully find one -- no use
+            # in backtracking or anything because that wastes time
+            print("making random move")
+            random_move = makeRandomMove()
+            updatePlayerPosition(random_move)
+            moveHistory.append(random_move)
+            return random_move
+    else:
+        # the case of len(move_recommendation) > 0:
         moveHistory.append(move_recommendation)
         updatePlayerPosition(move_recommendation)
         return move_recommendation
-    else:
-        random_move = makeRandomMove()
-        print("randomly moving")
-        print("move:", random_move)
-        updatePlayerPosition(random_move)
-        moveHistory.append(random_move)
-        return random_move
-
 
 
 def makeRandomMove():
