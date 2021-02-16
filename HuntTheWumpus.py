@@ -13,6 +13,8 @@ from random import randint
 import WumpusAgent
 import time
 import pygame
+import tkinter as tk
+from tkinter import ttk
 
 #--------------------------
 #globals
@@ -45,11 +47,12 @@ wumpilist = []
 #p = pit
 #w = wumpus
 #0 = empty space
-def setupBoard(wumpi, arrows):
+def setupBoard(wumpi, arrows, gridsize):
     #get size of board, needs to be at least the number of wumpi + 2 * 2
 
-    #temporarily making this a smaller number for testing
-    n = randint(wumpi+2, 200)
+    ##temporarily making this a smaller number for testing
+    #n = randint(wumpi+2, 200)
+    n = gridsize
 
     #initialize board, 0 represents a blank space
     l = []
@@ -227,15 +230,15 @@ def redraw(window, board, playerx, playery, lastmove):
 
 
     if lastmove == 'N':
-        pygame.draw.rect(window, (0, 200, 200), ((playerx + 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
+        pygame.draw.rect(window, (150, 230, 230), ((playerx + 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
     elif lastmove == 'S':
-        pygame.draw.rect(window, (0, 200, 200), ((playerx - 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
+        pygame.draw.rect(window, (150, 230, 230), ((playerx - 1) * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
     elif lastmove == 'E':
-        pygame.draw.rect(window, (0, 200, 200), (playerx * pitwidth + 2, (playery - 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
+        pygame.draw.rect(window, (150, 230, 230), (playerx * pitwidth + 2, (playery - 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
     elif lastmove == 'W':
-        pygame.draw.rect(window, (0, 200, 200), (playerx * pitwidth + 2, (playery + 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
+        pygame.draw.rect(window, (150, 230, 230), (playerx * pitwidth + 2, (playery + 1) * pitheight + 2, pitwidth - 2, pitheight - 2))
 
-    pygame.draw.rect(window, (0, 255, 255), (playerx * pitwidth + 2, playery * pitheight + 2, pitwidth - 2, pitheight - 2))
+    pygame.draw.rect(window, (60, 60, 60), (playerx * pitwidth + 1, playery * pitheight + 1, pitwidth - 1, pitheight - 1))
     pygame.display.update()
 
 def pitsGoldStart(window, board):
@@ -252,7 +255,7 @@ def pitsGoldStart(window, board):
                 pygame.draw.rect(window, (255,215,0), (x * pitwidth + 1, y * pitwidth + 1, pitwidth + 1, pitheight + 1))
 
 #simulation start
-def playGame(window):
+def playGame(window, gridsize):
     global gotgold
     global numpitdeaths
     global numwumpusdeaths
@@ -268,7 +271,7 @@ def playGame(window):
         nummoves = 0
 
         #set board, and player values
-        board, playerx, playery = setupBoard(numwumpi, numarrows)
+        board, playerx, playery = setupBoard(numwumpi, numarrows, gridsize)
 
         #set parameter for player - this is the reset for the WumpusAgent
         WumpusAgent.setParams(gametype, numarrows, numwumpi)
@@ -381,13 +384,13 @@ def playGame(window):
         wumpilist = []
 
 #gui functionality
-def runGame():
+def runGame(gridsize):
     windowheight = 800
     windowwwidth = 800
 
     pygame.init()
     window = pygame.display.set_mode((windowwwidth, windowheight))
-    playGame(window)
+    playGame(window, gridsize)
 
 #--------------------------
 #driver routine starts here
@@ -397,29 +400,97 @@ def runGame():
 #NOTE: games will run for a maximum of 20000 agent moves
 #SECOND NOTE: no user input checks are done - because Alan is lazy
 
-gametype = int(input("Enter the type of wumpi (1 for non-moving, 2 for moving): "))
-numwumpi = int(input("Enter the number of wumpi: "))
-numarrows = int(input("Enter the number of arrows: "))
-numgames = int(input("Enter the number of games: "))
+def buttonGoReleased(event):
+    global gametype
+    global numwumpi
+    global numarrows
+    global numgames
 
-runGame()
+    numgames = 1
+    gametype = gametypecombobox.current()
+    gridsize = int(gridsizespinbox.get())
+    numarrows = int(numberofarrowsspinbox.get())
+    numwumpi = int(numberofwumpispinbox.get())
 
-def printBoard(theboard):
-    for i in range(len(theboard)):
-        for j in range(len(theboard[0])):
-            if(playerx == i and playery == j):
-                print('*', ' ', end='')
-            else:
-                print(theboard[i][j], ' ', end='')
-        print()
+    runGame(gridsize)
+
+# making tkinter window
+dialog = tk.Tk()
+dialog.title("Hunt The Wumpus")
+dialog.geometry("350x350+400+200");
+
+# spaces for between the labels and spinboxes for prettiness
+space0 = tk.Label(text="")
+space1 = tk.Label(text="")
+space2 = tk.Label(text="")
+space3 = tk.Label(text="")
+
+#Making all of the labels and buttons
+labelgridsize = tk.Label(text="Grid Size")
+gridsizespinbox = ttk.Spinbox(from_ = 5, to = 200)
+gridsizespinbox.set(5)
+
+# gametype widgt needs string optinos so player cna make choice easier
+labelgametype = tk.Label(text="Game Type")
+gametypecombobox = ttk.Combobox()
+gametypecombobox['values'] = ('Stationary', 'Moving')
+gametypecombobox.current(0)
+
+# number of wumpi widgets and label, goes from 1 to 150, so not to overwhelm the agent
+labelnumberofwumpi = tk.Label(text="Number of Wumpi")
+numberofwumpispinbox = ttk.Spinbox(from_ = 1, to = 150);
+numberofwumpispinbox.set(1)
+
+# label and spinbox for number of arrows
+labelnumberofarrows = tk.Label(text="Number of Arrows")
+numberofarrowsspinbox = ttk.Spinbox(from_ = 1, to = 500)
+numberofarrowsspinbox.set(1)
+
+# when this button is pressed, game will play
+buttongo = ttk.Button(text="GO")
+buttongo.bind('<ButtonRelease-1>', buttonGoReleased)
+
+#Packing all of the spinboxes and labels into the window
+labelgridsize.pack()
+gridsizespinbox.pack()
+
+space0.pack()
+
+# gametype widgets
+labelgametype.pack()
+gametypecombobox.pack()
+
+space1.pack()
+
+# number of wumpi widgets
+labelnumberofwumpi.pack()
+numberofwumpispinbox.pack()
+
+space2.pack()
+
+# number of arrows widgets
+labelnumberofarrows.pack()
+numberofarrowsspinbox.pack()
+
+space3.pack()
+
+# when pressed it will play game
+buttongo.pack()
+
+dialog.mainloop()
+
+#gametype = int(input("Enter the type of wumpi (1 for non-moving, 2 for moving): "))
+#numwumpi = int(input("Enter the number of wumpi: "))
+#numarrows = int(input("Enter the number of arrows: "))
+#numgames = int(input("Enter the number of games: "))
 
 #stat output
-print("*********************************")
-print("Stats:")
-print("Number of games: " + str(numgames))
-print("Number of wins: " + str(numwins) + " Percentage: " + str(numwins/numgames * 100)[:5])
-print("Number of deaths: " + str(numpitdeaths + numwumpusdeaths) + " Percentage: " + str((numpitdeaths + numwumpusdeaths)/numgames * 100)[:5])
-print("Number of pit deaths: " + str(numpitdeaths) + " Percentage: " + str(numpitdeaths/numgames * 100)[:5])
-print("Number of deaths by wumpus mauling: " + str(numwumpusdeaths) + " Percentage: " + str(numwumpusdeaths/numgames * 100)[:5])
-print("Number of timeouts: " + str(numtimeouts))
-print("*********************************")
+#print("*********************************")
+#print("Stats:")
+#print("Number of games: " + str(numgames))
+#print("Number of wins: " + str(numwins) + " Percentage: " + str(numwins/numgames * 100)[:5])
+#print("Number of deaths: " + str(numpitdeaths + numwumpusdeaths) + " Percentage: " + str((numpitdeaths + numwumpusdeaths)/numgames * 100)[:5])
+#print("Number of pit deaths: " + str(numpitdeaths) + " Percentage: " + str(numpitdeaths/numgames * 100)[:5])
+#print("Number of deaths by wumpus mauling: " + str(numwumpusdeaths) + " Percentage: " + str(numwumpusdeaths/numgames * 100)[:5])
+#print("Number of timeouts: " + str(numtimeouts))
+#print("*********************************")

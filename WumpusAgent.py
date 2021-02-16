@@ -148,7 +148,6 @@ def getMove(percept):
             updatePlayerPosition(move)
             return move
         else:
-            print("climbing out")
             time.sleep(1)
             return climbout
 
@@ -224,8 +223,6 @@ def randomlyMove():
     # if that's the case then we die oh well -- we'd rather randomly choose a spot with only a possible pit than with
     # a possible pit AND a possible wumpus -- gotta maximize those odds
 
-    print("randomly moving")
-
     # list of all spots immediately around you -- aka your moving options
     oneDanger = []
     random_move = ''
@@ -237,7 +234,6 @@ def randomlyMove():
                 oneDanger.append([i[0], i[1]])  # it's listed as a dangerValue one -- add to that array
 
     if len(oneDanger) > 0:
-        print("choosing less dangerous spot")
         choice_index = random.randint(0, len(oneDanger)-1)
         choice_spot = oneDanger[choice_index]
         if choice_spot[0] == playerx and choice_spot[1] == playery - 1:
@@ -249,7 +245,6 @@ def randomlyMove():
         if choice_spot[0] == playerx - 1 and choice_spot[1] == playery:
             random_move = moveleft
     else:
-        print("literally randomly choosing")
         random_move = chooseRandomMove()
 
     return random_move
@@ -301,7 +296,6 @@ def checkPerceptAndUpdateDict(percept):
 
     # if in square with gold -- grab it, don't look at anything else!
     if glitter is True:
-        print("FOUND GOLD")
         foundgold = True
         return grabgold
 
@@ -356,9 +350,6 @@ def dealWithWallHit(previousMove):
     if previousMove == movedown:
         playery += 1
         minypos = playery
-
-    print("FOUND Wall")
-    print('Max x', maxxpos, ' Max y', maxypos, 'Min x', minxpos, 'Min y', minypos)
 
     for i in safeUnvisited:
         if i[0] < minxpos or i[0] > maxxpos or i[1] < minypos or i[1] > maxypos:
