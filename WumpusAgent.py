@@ -213,7 +213,7 @@ def getMove(percept):
         # the case of len(move_recommendation) > 0:
 
         # can probably take next line out? because only options are shooting/grabgold which don't need to be in this list
-        moveHistory.append(move_recommendation)
+        # moveHistory.append(move_recommendation)
 
         updatePlayerPosition(move_recommendation)
         return move_recommendation
@@ -223,33 +223,36 @@ def randomlyMove():
     # danger over squares with two possible dangers (ignoring the fact that only one B would be reported for two pits
     # if that's the case then we die oh well -- we'd rather randomly choose a spot with only a possible pit than with
     # a possible pit AND a possible wumpus -- gotta maximize those odds
+    random_move = ''  # variable that will be assigned with the final random move
 
-    print("randomly moving")
+    # if stationary wumpi - want to prioritize spots with only one danger as opposed to two, if there's moving
+    # wumpi this doesn't matter because we have no idea where the wumpi are so all squares are essentially same danger
+    if gametype == 1:
+        # list of all spots immediately around you -- aka your moving options
+        oneDanger = []
+        involvedSpots = [[playerx + 1, playery], [playerx - 1, playery], [playerx, playery + 1], [playerx, playery - 1]]
+        for i in involvedSpots:
+            if isInBounds(i[0], i[1]): # only want to consider spots that are in bounds
+                pointInfo = knownInfo.get((i[0], i[1]))
+                if pointInfo[2] == 1:
+                    oneDanger.append([i[0], i[1]])  # it's listed as a dangerValue one -- add to that array
 
-    # list of all spots immediately around you -- aka your moving options
-    oneDanger = []
-    random_move = ''
-    involvedSpots = [[playerx + 1, playery], [playerx - 1, playery], [playerx, playery + 1], [playerx, playery - 1]]
-    for i in involvedSpots:
-        if isInBounds(i[0], i[1]): # only want to consider spots that are in bounds
-            pointInfo = knownInfo.get((i[0], i[1]))
-            if pointInfo[2] == 1:
-                oneDanger.append([i[0], i[1]])  # it's listed as a dangerValue one -- add to that array
-
-    if len(oneDanger) > 0:
-        print("choosing less dangerous spot")
-        choice_index = random.randint(0, len(oneDanger)-1)
-        choice_spot = oneDanger[choice_index]
-        if choice_spot[0] == playerx and choice_spot[1] == playery - 1:
-            random_move = movedown
-        if choice_spot[0] == playerx and choice_spot[1] == playery + 1:
-            random_move = moveup
-        if choice_spot[0] == playerx + 1 and choice_spot[1] == playery:
-            random_move = moveright
-        if choice_spot[0] == playerx - 1 and choice_spot[1] == playery:
-            random_move = moveleft
+        if len(oneDanger) > 0:
+            print("choosing less dangerous spot")
+            choice_index = random.randint(0, len(oneDanger)-1)
+            choice_spot = oneDanger[choice_index]
+            if choice_spot[0] == playerx and choice_spot[1] == playery - 1:
+                random_move = movedown
+            if choice_spot[0] == playerx and choice_spot[1] == playery + 1:
+                random_move = moveup
+            if choice_spot[0] == playerx + 1 and choice_spot[1] == playery:
+                random_move = moveright
+            if choice_spot[0] == playerx - 1 and choice_spot[1] == playery:
+                random_move = moveleft
+        else:
+            print("literally randomly choosing")
+            random_move = chooseRandomMove()
     else:
-        print("literally randomly choosing")
         random_move = chooseRandomMove()
 
     return random_move
@@ -277,6 +280,8 @@ def checkPerceptAndUpdateDict(percept):
     global playery
     global knownInfo
     global safeUnvisited
+    global numarrows
+    global numwumpi
     breeze = False
     stench = False
     glitter = False
@@ -308,17 +313,31 @@ def checkPerceptAndUpdateDict(percept):
     # if scream, we know wumpus is dead and we may decrease our internal wumpus count
     # by 1 -- other than that this doesn't really make a difference because still need to move and find gold
     if scream is True:
+        print("killed wumpi")
         numwumpi -= 1  # we don't really do much with this :/
 
     # update the dictionary and safeUnexplored with the percept information
     updateDict(playerx, playery, breeze, stench, dangerlevel)
 
-    # pseudo code here --
-    # if stench is True and gameType == 1:
-        # check the four spots around us in the dictionary
-        # for loop tallying the counts for which have False in the 1 index (0 is breeze)
-        # if the count == 3, then we know that the wumpus is in the remaining spot
-        # return shooting in that direction
+    if stench is True and gametype == 1:
+        if numarrows > 0:  # only can do this if have arrows
+            involvedSpots = [[playerx + 1, playery], [playerx - 1, playery], [playerx, playery + 1], [playerx, playery - 1]]
+            maybeWumpi = []
+            for i in involvedSpots:
+                if isInBounds(i[0], i[1]):
+                    point_info = knownInfo.get((i[0], i[1]))
+                    if point_info[1] is True:  # if the dictionary has True in place for wumpi - it might be there so add point
+                        maybeWumpi.append(i)
+            if len(maybeWumpi) == 1:  # if only one possible spot, shoot an arrow that direction
+                if maybeWumpi[0][0] == playerx + 1:
+                    nextmove = shootright
+                if maybeWumpi[0][0] == playerx - 1:
+                    nextmove = shootleft
+                if maybeWumpi[0][1] == playery + 1:
+                    nextmove = shootup
+                if maybeWumpi[0][1] == playery - 1:
+                    nextmove = shootdown
+                numarrows -= 1  # decrease the number of arrows because we just shot one
 
     return nextmove
 
