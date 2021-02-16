@@ -255,7 +255,7 @@ def pitsGoldStart(window, board):
                 pygame.draw.rect(window, (255,215,0), (x * pitwidth + 1, y * pitwidth + 1, pitwidth + 1, pitheight + 1))
 
 #simulation start
-def playGame(window, gridsize):
+def playGame(window, gridsize, youdied):
     global gotgold
     global numpitdeaths
     global numwumpusdeaths
@@ -293,8 +293,6 @@ def playGame(window, gridsize):
             percept = percept + 'B'
         #while the player is not dead, and hasn't won yet, get the next move
         while deathCheck != True and winCheck != True and nummoves != 4000000:
-            #time.sleep(1)
-            #printBoard(board)
             nummoves = nummoves + 1
             #get move from agent
             move = WumpusAgent.getMove(percept)
@@ -357,8 +355,14 @@ def playGame(window, gridsize):
             #death check!
             if deathCheck(playerx, playery, board):
                 if board[playerx][playery] == 'p':
+                    window.blit(youdied, (100,250))
+                    pygame.display.flip()
+                    time.sleep(2)
                     numpitdeaths = numpitdeaths + 1
                 else:
+                    window.blit(youdied, (100, 250))
+                    pygame.display.flip()
+                    time.sleep(2)
                     numwumpusdeaths = numwumpusdeaths + 1
                 break
 
@@ -376,6 +380,9 @@ def playGame(window, gridsize):
 
             #check if we timed out
             if nummoves == 4000000:
+                window.blit(youdied, (100, 250))
+                pygame.display.flip()
+                time.sleep(2)
                 numtimeouts = numtimeouts + 1
         #quick status print
         print("Game number " + str(game) + " complete in " + str(nummoves) + " moves.")
@@ -390,7 +397,8 @@ def runGame(gridsize):
 
     pygame.init()
     window = pygame.display.set_mode((windowwwidth, windowheight))
-    playGame(window, gridsize)
+    youdied = pygame.image.load("death_image.jpg").convert()
+    playGame(window, gridsize, youdied)
 
 #--------------------------
 #driver routine starts here
