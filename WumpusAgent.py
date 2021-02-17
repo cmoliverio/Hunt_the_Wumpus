@@ -120,10 +120,10 @@ def updatePlayerPosition(move):
         playerx -= 1
 
     # add the place to pastLocations if not already in the last 100
-    if [playerx, playery] not in pastLocations[-50:]:
+    if [playerx, playery] not in pastLocations[-400:]:
         pastLocations.append([playerx, playery])
     # remove the place from safeUnvisited list
-    if [playerx, playery] in safeUnvisited:
+    if [playerx, playery] in safeUnvisited[-400:]:
         safeUnvisited.remove([playerx, playery])
 
 
@@ -149,6 +149,7 @@ def getMove(percept):
             return move
         else:
             print("climbing out")
+            print(len(safeUnvisited))
             time.sleep(1)
             return climbout
 
@@ -200,27 +201,24 @@ def getMove(percept):
                     # if no moves left to reverse -- gotta pick because no infinite loops and just hope for the best
                     # choose a potentially unsafe move
                     print("randomly moving in else statement")
-                    print("position: ", playerx, playery)
-                    print(safeUnvisited)
+                    # print("position: ", playerx, playery)
+                    # print(safeUnvisited)
                     random_move = randomlyMove()
-                    print("random_move", random_move)
+                    # print("random_move", random_move)
                     updatePlayerPosition(random_move)
                     moveHistory.append(random_move)
                     return random_move
         else:
             # if there's no safe unexplored spots, you want to make a random move to hopefully find one -- no use
             # in backtracking or anything because that wastes time
-            print("randomly moving")
+            # print("randomly moving")
+            print("randomly moving bc no safe moves left")
             random_move = randomlyMove()
             updatePlayerPosition(random_move)
             moveHistory.append(random_move)
             return random_move
     else:
         # the case of len(move_recommendation) > 0:
-
-        # can probably take next line out? because only options are shooting/grabgold which don't need to be in this list
-        # moveHistory.append(move_recommendation)
-
         updatePlayerPosition(move_recommendation)
         return move_recommendation
 
@@ -256,7 +254,6 @@ def randomlyMove():
             if choice_spot[0] == playerx - 1 and choice_spot[1] == playery:
                 random_move = moveleft
         else:
-            print("literally randomly choosing")
             random_move = chooseRandomMove()
     else:
         random_move = chooseRandomMove()
@@ -326,7 +323,7 @@ def checkPerceptAndUpdateDict(percept):
     updateDict(playerx, playery, breeze, stench, dangerlevel)
 
     if stench is True and gametype == 1:
-        if numarrows > 0:  # only can do this if have arrows
+        if numarrows > 0 and numwumpi > 0:  # only can do this if have arrows and wumpi to kill
             involvedSpots = [[playerx + 1, playery], [playerx - 1, playery], [playerx, playery + 1], [playerx, playery - 1]]
             maybeWumpi = []
             for i in involvedSpots:
@@ -458,8 +455,8 @@ def updateDict(x, y, breeze, stench, dangerlevel):
         if isInBounds(point_x, point_y):
             # if the danger level is 0, we want to add it to safeUnvisited if applicable
             if dangerlevel == 0:
-                if [point_x, point_y] not in safeUnvisited:
-                    if [point_x, point_y] not in pastLocations:
+                if [point_x, point_y] not in safeUnvisited[-400:]:
+                    if [point_x, point_y] not in pastLocations[-400:]:
                         safeUnvisited.append([point_x, point_y])
 
             # add the points to the dictionary regardless of values
@@ -481,8 +478,8 @@ def updateDict(x, y, breeze, stench, dangerlevel):
                     already_stored[2] = 0
                     # this means that we have ruled out the possibility of it being a pit or a wumpis
                     # check and see if it's in the safeUnvisited -- if not, add it bc now know its safe!
-                    if [point_x, point_y] not in safeUnvisited:
-                        if [point_x, point_y] not in pastLocations:
+                    if [point_x, point_y] not in safeUnvisited[-400:]:
+                        if [point_x, point_y] not in pastLocations[-400:]:
                             safeUnvisited.append([point_x, point_y])
                 new_info = {(point_x, point_y): already_stored}
 
