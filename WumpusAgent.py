@@ -6,6 +6,7 @@
 # while avoiding pits and the wumpus, and then escape alive!
 import random
 import time
+from collections import OrderedDict
 
 # parameters for type of game
 gametype = 0
@@ -55,7 +56,11 @@ moveHistory: list = []
 knownInfo: dict = {}
 
 # counter to see if in infinite loop
+num_moves = 0
+
 move_recommendation = ""
+
+
 
 
 def setParams(type, arrows, wumpi):
@@ -74,6 +79,7 @@ def setParams(type, arrows, wumpi):
     global minxpos
     global minypos
     global move_recommendation
+    global num_moves
     gametype = type
     numarrows = arrows
     numwumpi = wumpi
@@ -102,6 +108,7 @@ def setParams(type, arrows, wumpi):
     maxypos = 999
     minypos = -999
     move_recommendation = ""
+    num_moves = 0
 
 
 def updatePlayerPosition(move):
@@ -133,6 +140,9 @@ def getMove(percept):
     global moveHistory
     global safeUnvisited
     global move_recommendation
+    global num_moves
+
+    num_moves +=1
 
     move_recommendation = ''
 
@@ -153,6 +163,11 @@ def getMove(percept):
             time.sleep(1)
             return climbout
 
+    # every 100,000 moves, go through the safeUnvisited list and make sure
+    # there's no duplicates or already traveled ones
+    if num_moves % 100000 == 0:
+        safeUnvisited = removeDuplicatesAndAlreadyTravelledLocations()
+
     # check to see if you're at an edge already... deal w/ this first
     checkBump(percept)
 
@@ -167,7 +182,7 @@ def getMove(percept):
         if len(safeUnvisited) > 0:
             safe_spots = []
             # if the spots immediately around you are available, go there!
-            for i in safeUnvisited[-200:]:
+            for i in safeUnvisited[-400:]:
                 if i[0] == playerx and i[1] == playery - 1 and isInBounds(i[0], i[1]):
                     safe_spots.append(movedown)
                 if i[0] == playerx and i[1] == playery + 1 and isInBounds(i[0], i[1]):
@@ -493,3 +508,17 @@ def updateDict(x, y, breeze, stench, dangerlevel):
                 if stench is True:
                     dangerValue += 1
                 knownInfo[(point_x, point_y)] = [breeze, stench, dangerValue]
+
+def removeDuplicatesAndAlreadyTravelledLocations():
+    global safeUnvisited
+    global pastLocations
+
+    print("calling remove duplicates")
+    new_safeUnvisited = []
+    # this should remove the duplicates from safeUnvisited
+    for i in safeUnvisited:
+        if i not in new_safeUnvisited and i not in pastLocations:
+            new_safeUnvisited.append(i)
+
+    print("done with for loop")
+    return new_safeUnvisited
