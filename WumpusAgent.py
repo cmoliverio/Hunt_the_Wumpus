@@ -3,7 +3,9 @@
 # Date: 2/16/2021
 # Assignment:Project 1: Hunt the Wumpus
 # Description: Intelligent agent designed to retrieve the gold from the cave
-# while avoiding pits and the wumpus, kill the wumpus when possible, and then escape alive!
+# while avoiding pits and the wumpus, kill the wumpus when possible, and then escape alive! Slight acknowledgement
+# in order to speed up time by a lot, I truncated lists in searches, however about 1/800 or 1/1000 times
+# this list truncation results in a time out, without truncating lists, it was much slower but never timed out
 
 import random
 import time
@@ -218,7 +220,7 @@ def getMove(percept):
                 else:
                     # if no moves left to reverse -- gotta pick randomly to prevent infinite loops, usually only
                     # getting here in infinite loops, so I'll say to run the checkDuplicates here to make sure we're not
-                    # getting in one of those
+                    # getting in one of those -- could pose a potential problem w time, but only rarely
                     safeUnvisited = removeDuplicatesAndAlreadyTravelledLocations()
                     print("randomly moving in else statement")
                     print("position: ", playerx, playery)
