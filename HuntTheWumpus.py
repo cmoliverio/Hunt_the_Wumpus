@@ -4,6 +4,14 @@
 #Alan C. Jamieson
 #Latest Revision: February 4, 2021
 
+# Hannah Gorel, William Capon, Christian Oliverio, Liam Pratt
+# WumpusAgent.py
+# Latest Revision: 2/18/2021
+# Assignment:Project 1: Hunt the Wumpus
+# Description: Intelligent agent designed to retrieve the gold from the cave
+
+
+
 #This driver will ask the user for some information in regards to the format of the Hunt the Wumpus game (credit: Gregory Yob).
 #This information will then be passed to the WumpusAgent module (user provided), then randomly assign wumpi, pits, and gold.
 #The driver will simulate and provide sensory data as specified in the project document.

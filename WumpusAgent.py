@@ -1,6 +1,6 @@
 # Hannah Gorel, William Capon, Christian Oliverio, Liam Pratt
 # WumpusAgent.py
-# Date: 2/16/2021
+# Latest Revision: 2/18/2021
 # Assignment:Project 1: Hunt the Wumpus
 # Description: Intelligent agent designed to retrieve the gold from the cave
 # while avoiding pits and the wumpus, kill the wumpus when possible, and then escape alive! Slight acknowledgement
