@@ -266,6 +266,7 @@ def pitsGoldStart(window, board):
 def drawYouDied(window, youdied):
     window.blit(youdied, (50, 270))
     pygame.display.flip()
+    time.sleep(1)
 
 #simulation start
 def playGame(window, gridsize, youdied):
@@ -422,8 +423,8 @@ def buttonGoReleased(event):
     global numarrows
     global numgames
 
-    numgames = 1
     gametype = gametypecombobox.current() + 1
+    numgames = int(numberofgamesspinbox.get())
     gridsize = int(gridsizespinbox.get())
     numarrows = int(numberofarrowsspinbox.get())
     numwumpi = int(numberofwumpispinbox.get())
@@ -433,13 +434,14 @@ def buttonGoReleased(event):
 # making tkinter window
 dialog = tk.Tk()
 dialog.title("Hunt The Wumpus")
-dialog.geometry("350x350+400+200");
+dialog.geometry("350x400+400+200");
 
 # spaces for between the labels and spinboxes for prettiness
 space0 = tk.Label(text="")
 space1 = tk.Label(text="")
 space2 = tk.Label(text="")
 space3 = tk.Label(text="")
+space4 = tk.Label(text="")
 
 #Making all of the labels and buttons
 labelgridsize = tk.Label(text="Grid Size")
@@ -466,6 +468,10 @@ numberofarrowsspinbox.set(1)
 buttongo = ttk.Button(text="GO")
 buttongo.bind('<ButtonRelease-1>', buttonGoReleased)
 
+labelnumberofgames = tk.Label(text="Number of Games")
+numberofgamesspinbox = ttk.Spinbox(from_ = 1, to = 1000)
+numberofgamesspinbox.set(1)
+
 #Packing all of the spinboxes and labels into the window
 labelgridsize.pack()
 gridsizespinbox.pack()
@@ -489,6 +495,12 @@ labelnumberofarrows.pack()
 numberofarrowsspinbox.pack()
 
 space3.pack()
+
+#number of games to play
+labelnumberofgames.pack()
+numberofgamesspinbox.pack()
+
+space4.pack()
 
 # when pressed it will play game
 buttongo.pack()
