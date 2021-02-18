@@ -8,7 +8,6 @@
 # this list truncation results in a time out, without truncating lists, it was much slower but never timed out
 
 import random
-import time
 
 # parameters for type of game
 gametype = 0
@@ -170,8 +169,6 @@ def getMove(percept):
             updatePlayerPosition(move)
             return move
         else:
-            print("climbing out")
-            time.sleep(1)
             return climbout
 
     # every 100,000 moves, go through the safeUnvisited list and make sure there's no duplicates/already traveled spots
@@ -218,13 +215,10 @@ def getMove(percept):
                     updatePlayerPosition(move)  # update move count but don't add to moveHistory so no loop :)
                     return move
                 else:
-                    # if no moves left to reverse -- gotta pick randomly to prevent infinite loops, usually only
-                    # getting here in infinite loops, so I'll say to run the checkDuplicates here to make sure we're not
-                    # getting in one of those -- could pose a potential problem w time, but only rarely
-                    safeUnvisited = removeDuplicatesAndAlreadyTravelledLocations()
-                    print("randomly moving in else statement")
-                    print("position: ", playerx, playery)
-                    print(safeUnvisited)
+                    # if no moves left to reverse -- reset the safeUnvisited list and pick a random spot -- if you
+                    # don't reset safeUnvisited, will get stuck in finite loop of having length, but just reversing
+                    # repeatedly... so NEED to reset the list here then move randomly
+                    safeUnvisited = []
                     random_move = randomlyMove()
                     updatePlayerPosition(random_move)
                     moveHistory.append(random_move)
@@ -232,7 +226,6 @@ def getMove(percept):
         else:
             # if there's no safe unexplored spots, you want to make a random move to hopefully find one -- no use
             # in backtracking or anything because that wastes time
-            print("randomly moving bc no safe moves left")
             random_move = randomlyMove()
             updatePlayerPosition(random_move)
             moveHistory.append(random_move)
@@ -264,7 +257,6 @@ def randomlyMove():
                     oneDanger.append([i[0], i[1]])  # it's listed as a dangerValue one -- add to that array
 
         if len(oneDanger) > 0:
-            print("choosing less dangerous spot")
             choice_index = random.randint(0, len(oneDanger)-1)
             choice_spot = oneDanger[choice_index]
             if choice_spot[0] == playerx and choice_spot[1] == playery - 1:
@@ -335,7 +327,6 @@ def checkPerceptAndUpdateDict(percept):
 
     # if in square with gold -- grab it, don't look at anything else!
     if glitter is True:
-        print("FOUND GOLD")
         foundgold = True
         return grabgold
 
@@ -423,7 +414,6 @@ def checkPerceptAndUpdateDict(percept):
                             nextmove = shootright
                         if shoot_at[0] == playerx - 1:
                             nextmove = shootleft
-                    print("shooting")
                     numarrows -= 1
         else:  # if there's not a pit, then we really have no idea where the wumpus is... so best move is to just go
             # backwards and try to hope it didn't follow/come from that way
